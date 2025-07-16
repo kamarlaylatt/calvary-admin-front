@@ -61,7 +61,7 @@ const handleLogout = async () => {
     >
       <v-list-item
         prepend-avatar="https://randomuser.me/api/portraits/men/85.jpg"
-        title="Admin User"
+        :title="rail ? '' : 'Admin User'"
         nav
       >
         <template v-slot:append>
@@ -78,6 +78,7 @@ const handleLogout = async () => {
       <v-list density="compact" nav>
         <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="$router.push('/dashboard')"></v-list-item>
         <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="$router.push('/songs')"></v-list-item>
+        <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="$router.push('/styles')"></v-list-item>
         <v-list-item prepend-icon="mdi-account-group-outline" title="Users" value="users"></v-list-item>
         <v-list-item prepend-icon="mdi-cog" title="Settings" value="settings"></v-list-item>
         <v-list-item prepend-icon="mdi-chart-line" title="Analytics" value="analytics"></v-list-item>
@@ -87,6 +88,14 @@ const handleLogout = async () => {
       <template v-slot:append>
         <div class="pa-2">
           <v-btn
+            v-if="rail"
+            @click="handleLogout"
+            color="error"
+            variant="outlined"
+            icon="mdi-logout"
+          ></v-btn>
+          <v-btn
+            v-else
             @click="handleLogout"
             color="error"
             variant="outlined"
