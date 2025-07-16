@@ -1,12 +1,18 @@
 <template>
-  <v-container fluid class="pa-6">
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
+  <v-container fluid class="pa-6 pa-sm-4 pa-xs-2">
+    <div class="d-flex justify-space-between align-center mb-6 flex-wrap ga-4">
+      <div class="flex-grow-1">
         <h1 class="text-h4 font-weight-bold mb-2">Songs</h1>
-        <p class="text-subtitle-1 text-medium-emphasis">Manage your song collection</p>
+        <p class="text-subtitle-1 text-medium-emphasis d-none d-sm-block">Manage your song collection</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$router.push('/songs/new')">
-        Add Song
+      <v-btn 
+        color="primary" 
+        prepend-icon="mdi-plus" 
+        @click="$router.push('/songs/new')"
+        class="flex-shrink-0"
+      >
+        <span class="d-none d-sm-inline">Add Song</span>
+        <span class="d-sm-none">Add</span>
       </v-btn>
     </div>
 
@@ -23,8 +29,8 @@
     </v-alert>
 
     <v-card elevation="2">
-      <v-card-title class="d-flex justify-space-between align-center bg-surface">
-        <span>All Songs</span>
+      <v-card-title class="d-flex justify-space-between align-center bg-surface flex-wrap ga-4">
+        <span class="flex-shrink-0">All Songs</span>
         <v-text-field
           v-model="search"
           prepend-inner-icon="mdi-magnify"
@@ -33,73 +39,102 @@
           density="compact"
           hide-details
           clearable
-          class="max-w-sm"
+          style="max-width: 300px; min-width: 200px;"
+          class="flex-shrink-0"
           :loading="loading"
         ></v-text-field>
       </v-card-title>
       
-      <v-table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Song Writer</th>
-            <th>Style</th>
-            <th>Description</th>
-            <th>YouTube</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="6" class="text-center py-8">
-              <v-progress-circular indeterminate></v-progress-circular>
-              <div class="mt-2">Loading songs...</div>
-            </td>
-          </tr>
-          <tr v-else-if="filteredSongs.length === 0">
-            <td colspan="6" class="text-center py-8 text-medium-emphasis">
-              {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
-            </td>
-          </tr>
-          <tr v-else v-for="song in filteredSongs" :key="song.id">
-            <td class="font-weight-medium">{{ song.title }}</td>
-            <td>{{ song.song_writer || '-' }}</td>
-            <td>{{ song.style }}</td>
-            <td>
-              <span class="text-truncate d-inline-block" style="max-width: 200px">
-                {{ song.description || '-' }}
-              </span>
-            </td>
-            <td>
-              <v-btn
-                v-if="song.youtube"
-                icon="mdi-youtube"
-                size="small"
-                variant="text"
-                color="error"
-                :href="song.youtube"
-                target="_blank"
-              ></v-btn>
-              <span v-else class="text-medium-emphasis">-</span>
-            </td>
-            <td>
-              <v-btn
-                icon="mdi-pencil"
-                size="small"
-                variant="text"
-                @click="editSong(song)"
-              ></v-btn>
-              <v-btn
-                icon="mdi-delete"
-                size="small"
-                variant="text"
-                color="error"
-                @click="deleteSong(song)"
-              ></v-btn>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+      <div class="overflow-x-auto">
+        <v-table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th class="d-none d-md-table-cell">Song Writer</th>
+              <th>Style</th>
+              <th class="d-none d-lg-table-cell">Description</th>
+              <th class="d-none d-sm-table-cell">YouTube</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loading">
+              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3" class="text-center py-8">
+                <v-progress-circular indeterminate></v-progress-circular>
+                <div class="mt-2">Loading songs...</div>
+              </td>
+            </tr>
+            <tr v-else-if="songsWithStyles.length === 0">
+              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3" class="text-center py-8 text-medium-emphasis">
+                {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
+              </td>
+            </tr>
+            <tr v-else v-for="song in songsWithStyles" :key="song.id">
+              <td class="font-weight-medium">
+                <div>{{ song.title }}</div>
+                <div class="text-caption text-medium-emphasis d-md-none">
+                  {{ song.song_writer || 'Unknown writer' }}
+                </div>
+              </td>
+              <td class="d-none d-md-table-cell">{{ song.song_writer || '-' }}</td>
+              <td>{{ song.style }}</td>
+              <td class="d-none d-lg-table-cell">
+                <span class="text-truncate d-inline-block" style="max-width: 200px">
+                  {{ song.description || '-' }}
+                </span>
+              </td>
+              <td class="d-none d-sm-table-cell">
+                <v-btn
+                  v-if="song.youtube"
+                  icon="mdi-youtube"
+                  size="small"
+                  variant="text"
+                  color="error"
+                  :href="song.youtube"
+                  target="_blank"
+                ></v-btn>
+                <span v-else class="text-medium-emphasis">-</span>
+              </td>
+              <td>
+                <div class="d-flex align-center">
+                  <v-btn
+                    v-if="song.youtube"
+                    icon="mdi-youtube"
+                    size="small"
+                    variant="text"
+                    color="error"
+                    :href="song.youtube"
+                    target="_blank"
+                    class="d-sm-none"
+                  ></v-btn>
+                  <v-btn
+                    icon="mdi-pencil"
+                    size="small"
+                    variant="text"
+                    @click="editSong(song)"
+                  ></v-btn>
+                  <v-btn
+                    icon="mdi-delete"
+                    size="small"
+                    variant="text"
+                    color="error"
+                    @click="deleteSong(song)"
+                  ></v-btn>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </div>
+
+      <div class="text-center pa-4" v-if="totalPages > 1">
+        <v-pagination
+          v-model="page"
+          :length="totalPages"
+          rounded="circle"
+          @update:model-value="fetchSongs"
+        ></v-pagination>
+      </div>
     </v-card>
 
     <!-- Delete Confirmation Dialog -->
@@ -120,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch, watchEffect } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import apiService, { type Song, type Style } from '@/services/api'
 
@@ -131,11 +166,12 @@ const selectedSong = ref<Song | null>(null)
 const loading = ref(false)
 const deleting = ref(false)
 const error = ref('')
+const page = ref(1)
+const totalPages = ref(1)
 
 const songs = ref<Song[]>([])
 const styles = ref<Style[]>([])
 
-// Create computed song list with style names
 const songsWithStyles = computed(() => {
   return songs.value.map(song => ({
     ...song,
@@ -143,37 +179,32 @@ const songsWithStyles = computed(() => {
   }))
 })
 
-const filteredSongs = computed(() => {
-  if (!search.value) return songsWithStyles.value
-  const searchLower = search.value.toLowerCase()
-  return songsWithStyles.value.filter(song => 
-    song.title.toLowerCase().includes(searchLower) ||
-    song.song_writer?.toLowerCase().includes(searchLower) ||
-    song.style.toLowerCase().includes(searchLower) ||
-    song.description?.toLowerCase().includes(searchLower)
-  )
-})
-
-// Watch search input and fetch songs when it changes with debounce
 let searchTimeout: ReturnType<typeof setTimeout>
-watch(search, (newValue) => {
+watch(search, () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    fetchSongs(newValue || undefined)
+    page.value = 1
+    fetchSongs()
   }, 300)
 })
 
 onMounted(() => {
+  const pageQuery = router.currentRoute.value.query.page
+  if (pageQuery) {
+    page.value = parseInt(pageQuery as string)
+  }
   fetchSongs()
   fetchStyles()
 })
 
-async function fetchSongs(searchTerm?: string) {
+async function fetchSongs() {
   loading.value = true
   error.value = ''
   
   try {
-    songs.value = await apiService.getSongs(searchTerm)
+    const response = await apiService.getSongs(page.value, search.value || undefined)
+    songs.value = response.data
+    totalPages.value = response.last_page
   } catch (err) {
     error.value = 'Failed to load songs. Please try again.'
     console.error('Error fetching songs:', err)
@@ -191,7 +222,7 @@ async function fetchStyles() {
 }
 
 function editSong(song: Song) {
-  router.push(`/songs/${song.id}/edit`)
+  router.push(`/songs/${song.id}/edit?page=${page.value}`)
 }
 
 function deleteSong(song: Song) {
@@ -206,8 +237,7 @@ async function confirmDelete() {
   
   try {
     await apiService.deleteSong(selectedSong.value.id)
-    // Remove from local list
-    songs.value = songs.value.filter(s => s.id !== selectedSong.value!.id)
+    fetchSongs() // Refetch songs to update the list
     deleteDialog.value = false
     selectedSong.value = null
   } catch (err) {

@@ -111,10 +111,13 @@ class ApiService {
     return this.request<AdminProfile>('');
   }
 
-  async getSongs(search?: string): Promise<Song[]> {
-    const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    const response = await this.request<PaginatedResponse<Song>>(`/songs${params}`);
-    return response.data;
+  async getSongs(page: number = 1, search?: string): Promise<PaginatedResponse<Song>> {
+    const params = new URLSearchParams()
+    params.append('page', String(page))
+    if (search) {
+      params.append('search', search)
+    }
+    return this.request<PaginatedResponse<Song>>(`/songs?${params.toString()}`)
   }
 
   async createSong(song: Omit<Song, 'id' | 'created_at' | 'updated_at'>): Promise<Song> {

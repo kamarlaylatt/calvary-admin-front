@@ -5,7 +5,7 @@
         <h1 class="text-h4 font-weight-bold mb-2">{{ isEditing ? 'Edit Song' : 'Add New Song' }}</h1>
         <p class="text-subtitle-1 text-medium-emphasis">{{ isEditing ? 'Update song details' : 'Create a new song entry' }}</p>
       </div>
-      <v-btn variant="outlined" prepend-icon="mdi-arrow-left" @click="$router.push('/songs')">
+      <v-btn variant="outlined" prepend-icon="mdi-arrow-left" @click="$router.push({ path: '/songs', query: { page: route.query.page } })">
         Back to Songs
       </v-btn>
     </div>
@@ -126,7 +126,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RichTextEditor from '../components/RichTextEditor.vue'
-import apiService, { type Song, type Style } from '@/services/api'
+import apiService, { type Style } from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -225,7 +225,7 @@ async function saveSong() {
       })
     }
     
-    router.push('/songs')
+    router.push({ path: '/songs', query: { page: route.query.page } })
   } catch (err) {
     error.value = 'Failed to save song. Please try again.'
     console.error('Error saving song:', err)
