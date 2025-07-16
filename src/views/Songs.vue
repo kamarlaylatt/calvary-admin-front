@@ -10,6 +10,18 @@
       </v-btn>
     </div>
 
+    <!-- Error Alert -->
+    <v-alert
+      v-if="error"
+      type="error"
+      variant="tonal"
+      closable
+      class="mb-4"
+      @click:close="error = ''"
+    >
+      {{ error }}
+    </v-alert>
+
     <v-card elevation="2">
       <v-card-title class="d-flex justify-space-between align-center bg-surface">
         <span>All Songs</span>
@@ -22,6 +34,7 @@
           hide-details
           clearable
           class="max-w-sm"
+          :loading="loading"
         ></v-text-field>
       </v-card-title>
       
@@ -37,13 +50,24 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="song in filteredSongs" :key="song.id">
+          <tr v-if="loading">
+            <td colspan="6" class="text-center py-8">
+              <v-progress-circular indeterminate></v-progress-circular>
+              <div class="mt-2">Loading songs...</div>
+            </td>
+          </tr>
+          <tr v-else-if="filteredSongs.length === 0">
+            <td colspan="6" class="text-center py-8 text-medium-emphasis">
+              {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
+            </td>
+          </tr>
+          <tr v-else v-for="song in filteredSongs" :key="song.id">
             <td class="font-weight-medium">{{ song.title }}</td>
-            <td>{{ song.song_writer }}</td>
+            <td>{{ song.song_writer || '-' }}</td>
             <td>{{ song.style }}</td>
             <td>
               <span class="text-truncate d-inline-block" style="max-width: 200px">
-                {{ song.description }}
+                {{ song.description || '-' }}
               </span>
             </td>
             <td>
@@ -56,6 +80,7 @@
                 :href="song.youtube"
                 target="_blank"
               ></v-btn>
+              <span v-else class="text-medium-emphasis">-</span>
             </td>
             <td>
               <v-btn
@@ -86,8 +111,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" text @click="confirmDelete">Delete</v-btn>
+          <v-btn text @click="deleteDialog = false" :disabled="deleting">Cancel</v-btn>
+          <v-btn color="error" text @click="confirmDelete" :loading="deleting">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -95,76 +120,101 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
+import apiService, { type Song, type Style } from '@/services/api'
 
 const router = useRouter()
 const search = ref('')
 const deleteDialog = ref(false)
-const selectedSong = ref<any>(null)
+const selectedSong = ref<Song | null>(null)
+const loading = ref(false)
+const deleting = ref(false)
+const error = ref('')
 
-// Sample data - replace with API calls
-const songs = reactive([
-  {
-    id: 1,
-    title: 'Amazing Grace',
-    song_writer: 'John Newton',
-    style: 'Traditional',
-    description: 'A beloved hymn about redemption and grace',
-    youtube: 'https://www.youtube.com/watch?v=example1',
-    lyrics: 'Amazing grace how sweet the sound...',
-    music_notes: 'Key of G major, 3/4 time signature'
-  },
-  {
-    id: 2,
-    title: 'How Great Thou Art',
-    song_writer: 'Stuart K. Hine',
-    style: 'Hymn',
-    description: 'A powerful hymn of praise and worship',
-    youtube: 'https://www.youtube.com/watch?v=example2',
-    lyrics: 'O Lord my God when I in awesome wonder...',
-    music_notes: 'Key of Bb major, 4/4 time signature'
-  },
-  {
-    id: 3,
-    title: 'Great is Thy Faithfulness',
-    song_writer: 'Thomas Chisholm',
-    style: 'Contemporary',
-    description: 'A song about God\'s unwavering faithfulness',
-    youtube: '',
-    lyrics: 'Great is thy faithfulness, O God my father...',
-    music_notes: 'Key of D major, 3/4 time signature'
-  }
-])
+const songs = ref<Song[]>([])
+const styles = ref<Style[]>([])
+
+// Create computed song list with style names
+const songsWithStyles = computed(() => {
+  return songs.value.map(song => ({
+    ...song,
+    style: styles.value.find(style => style.id === song.style_id)?.name || 'Unknown'
+  }))
+})
 
 const filteredSongs = computed(() => {
-  if (!search.value) return songs
+  if (!search.value) return songsWithStyles.value
   const searchLower = search.value.toLowerCase()
-  return songs.filter(song => 
+  return songsWithStyles.value.filter(song => 
     song.title.toLowerCase().includes(searchLower) ||
-    song.song_writer.toLowerCase().includes(searchLower) ||
+    song.song_writer?.toLowerCase().includes(searchLower) ||
     song.style.toLowerCase().includes(searchLower) ||
-    song.description.toLowerCase().includes(searchLower)
+    song.description?.toLowerCase().includes(searchLower)
   )
 })
 
-function editSong(song: any) {
+// Watch search input and fetch songs when it changes with debounce
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(search, (newValue) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    fetchSongs(newValue || undefined)
+  }, 300)
+})
+
+onMounted(() => {
+  fetchSongs()
+  fetchStyles()
+})
+
+async function fetchSongs(searchTerm?: string) {
+  loading.value = true
+  error.value = ''
+  
+  try {
+    songs.value = await apiService.getSongs(searchTerm)
+  } catch (err) {
+    error.value = 'Failed to load songs. Please try again.'
+    console.error('Error fetching songs:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function fetchStyles() {
+  try {
+    styles.value = await apiService.getStyles()
+  } catch (err) {
+    console.error('Error fetching styles:', err)
+  }
+}
+
+function editSong(song: Song) {
   router.push(`/songs/${song.id}/edit`)
 }
 
-function deleteSong(song: any) {
+function deleteSong(song: Song) {
   selectedSong.value = song
   deleteDialog.value = true
 }
 
-function confirmDelete() {
-  if (selectedSong.value) {
-    const index = songs.findIndex(s => s.id === selectedSong.value.id)
-    if (index > -1) {
-      songs.splice(index, 1)
-    }
+async function confirmDelete() {
+  if (!selectedSong.value) return
+  
+  deleting.value = true
+  
+  try {
+    await apiService.deleteSong(selectedSong.value.id)
+    // Remove from local list
+    songs.value = songs.value.filter(s => s.id !== selectedSong.value!.id)
+    deleteDialog.value = false
+    selectedSong.value = null
+  } catch (err) {
+    error.value = 'Failed to delete song. Please try again.'
+    console.error('Error deleting song:', err)
+  } finally {
+    deleting.value = false
   }
-  deleteDialog.value = false
-  selectedSong.value = null
 }
 </script>

@@ -10,9 +10,25 @@
       </v-btn>
     </div>
 
+    <!-- Error Alert -->
+    <v-alert
+      v-if="error"
+      type="error"
+      variant="tonal"
+      closable
+      class="mb-4"
+      @click:close="error = ''"
+    >
+      {{ error }}
+    </v-alert>
+
     <v-card elevation="2">
       <v-card-text>
-        <v-form @submit.prevent="saveSong">
+        <div v-if="loading" class="text-center py-8">
+          <v-progress-circular indeterminate></v-progress-circular>
+          <div class="mt-2">Loading song...</div>
+        </div>
+        <v-form v-else @submit.prevent="saveSong">
           <v-row>
             <v-col cols="12" md="6">
               <v-text-field
@@ -41,6 +57,8 @@
                 item-value="id"
                 label="Style"
                 variant="outlined"
+                required
+                :rules="[v => !!v || 'Style is required']"
               ></v-select>
             </v-col>
             <v-col cols="12" md="6">
@@ -108,101 +126,109 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RichTextEditor from '../components/RichTextEditor.vue'
+import apiService, { type Song, type Style } from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
 
 const saving = ref(false)
+const loading = ref(false)
+const error = ref('')
 const isEditing = computed(() => !!route.params.id)
 
 const song = reactive({
-  id: null,
+  id: null as number | null,
   title: '',
   song_writer: '',
-  style_id: null,
+  style_id: null as number | null,
   youtube: '',
   description: '',
   lyrics: '',
   music_notes: ''
 })
 
-// Sample styles - replace with API call
-const styles = ref([
-  { id: 1, name: 'Traditional' },
-  { id: 2, name: 'Contemporary' },
-  { id: 3, name: 'Hymn' },
-  { id: 4, name: 'Gospel' },
-  { id: 5, name: 'Praise & Worship' },
-  { id: 6, name: 'Spiritual' }
-])
-
-// Sample songs data for editing - replace with API call
-const sampleSongs = [
-  {
-    id: 1,
-    title: 'Amazing Grace',
-    song_writer: 'John Newton',
-    style_id: 1,
-    youtube: 'https://www.youtube.com/watch?v=example1',
-    description: 'A beloved hymn about redemption and grace',
-    lyrics: '<p>Amazing grace how sweet the sound<br>That saved a wretch like me<br>I once was lost but now am found<br>Was blind but now I see</p>',
-    music_notes: '<p><strong>Key:</strong> G major</p><p><strong>Time Signature:</strong> 3/4</p><p><strong>Tempo:</strong> Moderately slow</p>'
-  },
-  {
-    id: 2,
-    title: 'How Great Thou Art',
-    song_writer: 'Stuart K. Hine',
-    style_id: 3,
-    youtube: 'https://www.youtube.com/watch?v=example2',
-    description: 'A powerful hymn of praise and worship',
-    lyrics: '<p>O Lord my God when I in awesome wonder<br>Consider all the works thy hands have made<br>I see the stars, I hear the rolling thunder<br>Thy power throughout the universe displayed</p>',
-    music_notes: '<p><strong>Key:</strong> Bb major</p><p><strong>Time Signature:</strong> 4/4</p><p><strong>Tempo:</strong> Moderate</p>'
-  },
-  {
-    id: 3,
-    title: 'Great is Thy Faithfulness',
-    song_writer: 'Thomas Chisholm',
-    style_id: 2,
-    youtube: '',
-    description: 'A song about God\'s unwavering faithfulness',
-    lyrics: '<p>Great is thy faithfulness, O God my father<br>There is no shadow of turning with thee<br>Thou changest not, thy compassions they fail not<br>As thou hast been thou forever wilt be</p>',
-    music_notes: '<p><strong>Key:</strong> D major</p><p><strong>Time Signature:</strong> 3/4</p><p><strong>Tempo:</strong> Slow and reverent</p>'
-  }
-]
+const styles = ref<Style[]>([])
 
 onMounted(() => {
+  fetchStyles()
   if (isEditing.value) {
     loadSong()
   }
 })
 
-function loadSong() {
+async function fetchStyles() {
+  try {
+    styles.value = await apiService.getStyles()
+  } catch (err) {
+    error.value = 'Failed to load styles. Please try again.'
+    console.error('Error fetching styles:', err)
+  }
+}
+
+async function loadSong() {
   const songId = parseInt(route.params.id as string)
-  const existingSong = sampleSongs.find(s => s.id === songId)
+  if (isNaN(songId)) {
+    router.push('/songs')
+    return
+  }
   
-  if (existingSong) {
+  loading.value = true
+  error.value = ''
+  
+  try {
+    const existingSong = await apiService.getSong(songId)
     Object.assign(song, existingSong)
+  } catch (err) {
+    error.value = 'Failed to load song. Please try again.'
+    console.error('Error loading song:', err)
+  } finally {
+    loading.value = false
   }
 }
 
 async function saveSong() {
+  if (!song.title.trim()) {
+    error.value = 'Song title is required.'
+    return
+  }
+  
+  if (!song.style_id) {
+    error.value = 'Style is required.'
+    return
+  }
+  
   saving.value = true
+  error.value = ''
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    if (isEditing.value) {
-      console.log('Updating song:', song)
+    if (isEditing.value && song.id) {
       // Update existing song
+      await apiService.updateSong(song.id, {
+        title: song.title,
+        song_writer: song.song_writer,
+        style_id: song.style_id!,
+        youtube: song.youtube,
+        description: song.description,
+        lyrics: song.lyrics,
+        music_notes: song.music_notes
+      })
     } else {
-      console.log('Creating new song:', song)
       // Create new song
+      await apiService.createSong({
+        title: song.title,
+        song_writer: song.song_writer,
+        style_id: song.style_id!,
+        youtube: song.youtube,
+        description: song.description,
+        lyrics: song.lyrics,
+        music_notes: song.music_notes
+      })
     }
     
     router.push('/songs')
-  } catch (error) {
-    console.error('Error saving song:', error)
+  } catch (err) {
+    error.value = 'Failed to save song. Please try again.'
+    console.error('Error saving song:', err)
   } finally {
     saving.value = false
   }

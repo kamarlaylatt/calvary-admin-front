@@ -28,6 +28,14 @@ interface Song {
   updated_at: string;
 }
 
+interface PaginatedResponse<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
 interface Style {
   id: number;
   name: string;
@@ -105,7 +113,8 @@ class ApiService {
 
   async getSongs(search?: string): Promise<Song[]> {
     const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    return this.request<Song[]>(`/songs${params}`);
+    const response = await this.request<PaginatedResponse<Song>>(`/songs${params}`);
+    return response.data;
   }
 
   async createSong(song: Omit<Song, 'id' | 'created_at' | 'updated_at'>): Promise<Song> {
@@ -166,4 +175,4 @@ class ApiService {
 }
 
 export default new ApiService();
-export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style };
+export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, PaginatedResponse };
