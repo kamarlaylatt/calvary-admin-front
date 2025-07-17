@@ -3,178 +3,116 @@
     <!-- Dashboard Header -->
     <div class="d-flex justify-space-between align-center mb-6">
       <div>
-        <h1 class="text-h4 font-weight-bold mb-2">Admin Dashboard</h1>
-        <p class="text-subtitle-1 text-medium-emphasis">Welcome back! Here's what's happening with your application.</p>
+        <h1 class="text-h4 font-weight-bold mb-2">Dashboard</h1>
+        <p class="text-subtitle-1 text-medium-emphasis">Essential metrics overview</p>
       </div>
-      <v-btn color="primary" prepend-icon="mdi-plus">
-        New Item
-      </v-btn>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- Essential Metrics Cards -->
     <v-row class="mb-6">
-      <v-col cols="12" sm="6" md="3">
+      <v-col cols="12" sm="6">
         <v-card elevation="2" class="h-100">
           <v-card-text>
-            <div class="d-flex justify-space-between align-center">
+            <div v-if="loading" class="d-flex justify-space-between align-center">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Total Users</p>
-                <h3 class="text-h5">1,234</h3>
+                <v-skeleton-loader type="text" width="80" class="mb-1"></v-skeleton-loader>
+                <v-skeleton-loader type="heading" width="60"></v-skeleton-loader>
+              </div>
+              <v-skeleton-loader type="avatar" size="48"></v-skeleton-loader>
+            </div>
+            <div v-else class="d-flex justify-space-between align-center">
+              <div>
+                <p class="text-caption text-medium-emphasis mb-1">Total Songs</p>
+                <h3 class="text-h4">{{ songsCount }}</h3>
               </div>
               <v-avatar color="primary" size="48">
-                <v-icon>mdi-account-group</v-icon>
+                <v-icon>mdi-music-note</v-icon>
               </v-avatar>
-            </div>
-            <div class="d-flex align-center mt-2">
-              <v-icon color="success" size="small">mdi-trending-up</v-icon>
-              <span class="text-success text-caption ml-1">+12% from last month</span>
             </div>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" sm="6" md="3">
+      
+      <v-col cols="12" sm="6">
         <v-card elevation="2" class="h-100">
           <v-card-text>
-            <div class="d-flex justify-space-between align-center">
+            <div v-if="loading" class="d-flex justify-space-between align-center">
               <div>
-                <p class="text-caption text-medium-emphasis mb-1">Active Sessions</p>
-                <h3 class="text-h5">892</h3>
+                <v-skeleton-loader type="text" width="80" class="mb-1"></v-skeleton-loader>
+                <v-skeleton-loader type="heading" width="60"></v-skeleton-loader>
+              </div>
+              <v-skeleton-loader type="avatar" size="48"></v-skeleton-loader>
+            </div>
+            <div v-else class="d-flex justify-space-between align-center">
+              <div>
+                <p class="text-caption text-medium-emphasis mb-1">Total Styles</p>
+                <h3 class="text-h4">{{ stylesCount }}</h3>
               </div>
               <v-avatar color="success" size="48">
-                <v-icon>mdi-monitor</v-icon>
+                <v-icon>mdi-tag</v-icon>
               </v-avatar>
-            </div>
-            <div class="d-flex align-center mt-2">
-              <v-icon color="success" size="small">mdi-trending-up</v-icon>
-              <span class="text-success text-caption ml-1">+5% from last hour</span>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card elevation="2" class="h-100">
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <p class="text-caption text-medium-emphasis mb-1">Revenue</p>
-                <h3 class="text-h5">$12,345</h3>
-              </div>
-              <v-avatar color="warning" size="48">
-                <v-icon>mdi-currency-usd</v-icon>
-              </v-avatar>
-            </div>
-            <div class="d-flex align-center mt-2">
-              <v-icon color="error" size="small">mdi-trending-down</v-icon>
-              <span class="text-error text-caption ml-1">-3% from last month</span>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card elevation="2" class="h-100">
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <p class="text-caption text-medium-emphasis mb-1">System Health</p>
-                <h3 class="text-h5">98.5%</h3>
-              </div>
-              <v-avatar color="info" size="48">
-                <v-icon>mdi-heart-pulse</v-icon>
-              </v-avatar>
-            </div>
-            <div class="d-flex align-center mt-2">
-              <v-icon color="success" size="small">mdi-check-circle</v-icon>
-              <span class="text-success text-caption ml-1">All systems operational</span>
             </div>
           </v-card-text>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- Charts and Tables Section -->
+    <!-- Recent Items -->
     <v-row>
-      <v-col cols="12" md="8">
+      <v-col cols="12" md="6">
         <v-card elevation="2">
-          <v-card-title class="d-flex justify-space-between align-center bg-surface">
-            <span>Recent Activity</span>
-            <v-btn variant="text" size="small" color="primary">View All</v-btn>
+          <v-card-title class="bg-surface">
+            <span>Recent Songs</span>
           </v-card-title>
           <v-card-text class="pa-0">
-            <v-table>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Time</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>John Doe</td>
-                  <td>Login</td>
-                  <td>2 minutes ago</td>
-                  <td><v-chip color="success" size="small">Success</v-chip></td>
-                </tr>
-                <tr>
-                  <td>Jane Smith</td>
-                  <td>Update Profile</td>
-                  <td>5 minutes ago</td>
-                  <td><v-chip color="success" size="small">Success</v-chip></td>
-                </tr>
-                <tr>
-                  <td>Bob Johnson</td>
-                  <td>Failed Login</td>
-                  <td>10 minutes ago</td>
-                  <td><v-chip color="error" size="small">Failed</v-chip></td>
-                </tr>
-                <tr>
-                  <td>Alice Wilson</td>
-                  <td>Data Export</td>
-                  <td>15 minutes ago</td>
-                  <td><v-chip color="warning" size="small">Pending</v-chip></td>
-                </tr>
-              </tbody>
-            </v-table>
+            <div v-if="loading" class="pa-4">
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+            </div>
+            <v-list v-else-if="recentSongs.length > 0">
+              <v-list-item 
+                v-for="song in recentSongs" 
+                :key="song.id"
+                :title="song.title"
+                :subtitle="song.styleName || 'No style'"
+              >
+                <template v-slot:prepend>
+                  <v-icon color="primary">mdi-music-note</v-icon>
+                </template>
+              </v-list-item>
+            </v-list>
+            <div v-else class="text-center pa-4 text-medium-emphasis">
+              No songs available
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card elevation="2" class="mb-4">
-          <v-card-title class="bg-surface">Quick Actions</v-card-title>
-          <v-card-text class="pa-0">
-            <v-list>
-              <v-list-item prepend-icon="mdi-account-plus" title="Add User" @click="() => {}"></v-list-item>
-              <v-list-item prepend-icon="mdi-database-export" title="Export Data" @click="() => {}"></v-list-item>
-              <v-list-item prepend-icon="mdi-backup-restore" title="Backup System" @click="() => {}"></v-list-item>
-              <v-list-item prepend-icon="mdi-security" title="Security Audit" @click="() => {}"></v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-        
+      
+      <v-col cols="12" md="6">
         <v-card elevation="2">
-          <v-card-title class="bg-surface">System Status</v-card-title>
-          <v-card-text>
-            <div class="mb-3">
-              <div class="d-flex justify-space-between align-center mb-1">
-                <span class="text-body-2">CPU Usage</span>
-                <span class="text-body-2">45%</span>
-              </div>
-              <v-progress-linear value="45" color="success" height="6"></v-progress-linear>
+          <v-card-title class="bg-surface">
+            <span>Recent Styles</span>
+          </v-card-title>
+          <v-card-text class="pa-0">
+            <div v-if="loading" class="pa-4">
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
             </div>
-            <div class="mb-3">
-              <div class="d-flex justify-space-between align-center mb-1">
-                <span class="text-body-2">Memory Usage</span>
-                <span class="text-body-2">72%</span>
-              </div>
-              <v-progress-linear value="72" color="warning" height="6"></v-progress-linear>
-            </div>
-            <div>
-              <div class="d-flex justify-space-between align-center mb-1">
-                <span class="text-body-2">Storage</span>
-                <span class="text-body-2">28%</span>
-              </div>
-              <v-progress-linear value="28" color="info" height="6"></v-progress-linear>
+            <v-list v-else-if="recentStyles.length > 0">
+              <v-list-item 
+                v-for="style in recentStyles" 
+                :key="style.id"
+                :title="style.name"
+              >
+                <template v-slot:prepend>
+                  <v-icon color="success">mdi-tag</v-icon>
+                </template>
+              </v-list-item>
+            </v-list>
+            <div v-else class="text-center pa-4 text-medium-emphasis">
+              No styles available
             </div>
           </v-card-text>
         </v-card>
@@ -184,5 +122,42 @@
 </template>
 
 <script setup lang="ts">
-// Dashboard component
+import { ref, onMounted } from 'vue'
+import apiService, { type Song, type Style } from '@/services/api'
+
+const songsCount = ref(0)
+const stylesCount = ref(0)
+const recentSongs = ref<(Song & { styleName?: string })[]>([])
+const recentStyles = ref<Style[]>([])
+const loading = ref(true)
+const stylesMap = ref<Map<number, string>>(new Map())
+
+onMounted(async () => {
+  await loadDashboardData()
+})
+
+async function loadDashboardData() {
+  loading.value = true
+  try {
+    // Load styles first to create mapping
+    const stylesData = await apiService.getStyles()
+    stylesCount.value = stylesData.length
+    recentStyles.value = stylesData.slice(0, 5)
+    
+    // Create style mapping
+    stylesMap.value = new Map(stylesData.map(style => [style.id, style.name]))
+
+    // Load songs count and recent songs
+    const songsResponse = await apiService.getSongs(1)
+    songsCount.value = songsResponse.total
+    recentSongs.value = songsResponse.data.slice(0, 5).map(song => ({
+      ...song,
+      styleName: stylesMap.value.get(song.style_id) || 'Unknown'
+    }))
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
