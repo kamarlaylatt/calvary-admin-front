@@ -57,16 +57,6 @@
                   
                   <v-list-item>
                     <v-list-item-content>
-                      <v-list-item-title class="text-h6">User ID</v-list-item-title>
-                      <v-list-item-subtitle>{{ profile.id }}</v-list-item-subtitle>
-                    </v-list-item-content>
-                    <v-list-item-action>
-                      <v-icon>mdi-identifier</v-icon>
-                    </v-list-item-action>
-                  </v-list-item>
-                  
-                  <v-list-item>
-                    <v-list-item-content>
                       <v-list-item-title class="text-h6">Created</v-list-item-title>
                       <v-list-item-subtitle>{{ formatDate(profile.created_at) }}</v-list-item-subtitle>
                     </v-list-item-content>
@@ -136,7 +126,7 @@ import apiService from '@/services/api';
 import type { AdminProfile } from '@/services/api';
 
 const router = useRouter();
-const { logout } = useAuth();
+const { logout, checkAuth } = useAuth();
 const profile = ref<AdminProfile | null>(null);
 const loading = ref(true);
 const logoutLoading = ref(false);
@@ -147,7 +137,7 @@ const loadProfile = async () => {
   error.value = '';
   
   try {
-    profile.value = await apiService.getAdminProfile();
+    profile.value = await apiService.getAdminDetail();
   } catch (err) {
     error.value = 'Failed to load profile. Please try again.';
   } finally {
@@ -174,6 +164,10 @@ const formatDate = (dateString: string) => {
 };
 
 onMounted(() => {
-  loadProfile();
+  if (checkAuth()) {
+    loadProfile();
+  } else {
+    router.push('/login');
+  }
 });
 </script>

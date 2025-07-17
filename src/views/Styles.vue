@@ -111,12 +111,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import apiService, { type Style } from '@/services/api'
 
 const router = useRouter()
 const search = ref('')
+const debouncedSearch = ref('')
 const deleteDialog = ref(false)
 const selectedStyle = ref<Style | null>(null)
 const loading = ref(false)
@@ -126,10 +127,18 @@ const error = ref('')
 const styles = ref<Style[]>([])
 
 const filteredStyles = computed(() => {
-  if (!search.value) return styles.value
-  return styles.value.filter(style => 
-    style.name.toLowerCase().includes(search.value.toLowerCase())
+  if (!debouncedSearch.value) return styles.value
+  return styles.value.filter(style =>
+    style.name.toLowerCase().includes(debouncedSearch.value.toLowerCase())
   )
+})
+
+let searchTimeout: ReturnType<typeof setTimeout>
+watch(search, (newValue) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newValue
+  }, 2100)
 })
 
 onMounted(() => {

@@ -185,7 +185,7 @@ watch(search, () => {
   searchTimeout = setTimeout(() => {
     page.value = 1
     fetchSongs()
-  }, 300)
+  }, 2100)
 })
 
 onMounted(() => {

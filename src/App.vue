@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useTheme, useDisplay } from 'vuetify'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import apiService from '@/services/api'
+import type { AdminProfile } from '@/services/api'
 
 const { mdAndUp } = useDisplay()
 const router = useRouter()
@@ -11,8 +13,20 @@ const { isAuthenticated, logout } = useAuth()
 
 const drawer = ref(true)
 const rail = ref(false)
+const profile = ref<AdminProfile | null>(null)
 
 const theme = useTheme()
+
+// Fetch profile data
+onMounted(async () => {
+  if (isAuthenticated.value) {
+    try {
+      profile.value = await apiService.getAdminDetail()
+    } catch (error) {
+      console.error('Failed to fetch profile:', error)
+    }
+  }
+})
 
 // Hide navigation for login page
 const showNavigation = computed(() => {
@@ -61,7 +75,7 @@ const handleLogout = async () => {
     >
       <v-list-item
         prepend-avatar="https://randomuser.me/api/portraits/men/85.jpg"
-        :title="rail ? '' : 'Admin User'"
+        :title="rail ? '' : profile?.name || 'Admin User'"
         nav
       >
         <template v-slot:append>

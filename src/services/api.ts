@@ -7,6 +7,17 @@ interface LoginResponse {
   token: string;
 }
 
+interface AdminProfileResponse {
+  admin: {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 interface AdminProfile {
   id: number;
   name: string;
@@ -55,11 +66,11 @@ class ApiService {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
     }
-    
+
     return headers;
   }
 
@@ -91,10 +102,10 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
-    
+
     this.token = response.token;
     localStorage.setItem('admin_token', response.token);
-    
+
     return response;
   }
 
@@ -102,13 +113,20 @@ class ApiService {
     await this.request('/logout', {
       method: 'POST',
     });
-    
+
     this.token = null;
     localStorage.removeItem('admin_token');
   }
 
-  async getAdminProfile(): Promise<AdminProfile> {
-    return this.request<AdminProfile>('');
+  async getAdminDetail(): Promise<AdminProfile> {
+    const response = await this.request<AdminProfileResponse>('');
+    return {
+      id: response.admin.id,
+      name: response.admin.name,
+      email: response.admin.email,
+      created_at: response.admin.created_at,
+      updated_at: response.admin.updated_at
+    };
   }
 
   async getSongs(page: number = 1, search?: string): Promise<PaginatedResponse<Song>> {
