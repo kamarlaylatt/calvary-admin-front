@@ -10,13 +10,20 @@
           
           <v-card-text>
             <v-row v-if="loading">
-              <v-col cols="12" class="text-center">
-                <v-progress-circular
-                  indeterminate
-                  size="64"
-                  color="primary"
-                ></v-progress-circular>
-                <p class="mt-4">Loading profile...</p>
+              <v-col cols="12" md="6">
+                <v-card class="pa-4">
+                  <v-skeleton-loader type="list-item-avatar-two-line" class="mb-4"></v-skeleton-loader>
+                  <v-skeleton-loader type="list-item-avatar-two-line" class="mb-4"></v-skeleton-loader>
+                  <v-skeleton-loader type="list-item-avatar-two-line" class="mb-4"></v-skeleton-loader>
+                  <v-skeleton-loader type="list-item-avatar-two-line"></v-skeleton-loader>
+                </v-card>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-card variant="outlined" class="pa-4">
+                  <v-skeleton-loader type="heading" class="mb-4"></v-skeleton-loader>
+                  <v-skeleton-loader type="button" class="mb-4"></v-skeleton-loader>
+                  <v-skeleton-loader type="button"></v-skeleton-loader>
+                </v-card>
               </v-col>
             </v-row>
             

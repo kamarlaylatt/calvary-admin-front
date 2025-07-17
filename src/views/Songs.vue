@@ -59,9 +59,19 @@
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3" class="text-center py-8">
-                <v-progress-circular indeterminate></v-progress-circular>
-                <div class="mt-2">Loading songs...</div>
+              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3">
+                <div class="d-flex flex-column ga-4 pa-4">
+                  <template v-for="i in 5" :key="i">
+                    <div class="d-flex ga-4">
+                      <v-skeleton-loader type="text" width="20%"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="15%" class="d-none d-md-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="15%"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="25%" class="d-none d-lg-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="10%" class="d-none d-sm-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="button" width="15%"></v-skeleton-loader>
+                    </div>
+                  </template>
+                </div>
               </td>
             </tr>
             <tr v-else-if="songsWithStyles.length === 0">
