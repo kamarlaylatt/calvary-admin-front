@@ -92,6 +92,7 @@ const handleLogout = async () => {
       <v-list density="compact" nav>
         <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="$router.push('/dashboard')"></v-list-item>
         <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="$router.push('/songs')"></v-list-item>
+        <v-list-item prepend-icon="mdi-tag" title="Categories" value="categories" @click="$router.push('/categories')"></v-list-item>
         <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="$router.push('/styles')"></v-list-item>
         <v-list-item prepend-icon="mdi-account" title="Profile" value="profile" @click="$router.push('/profile')"></v-list-item>
       </v-list>
