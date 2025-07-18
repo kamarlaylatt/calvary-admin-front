@@ -68,6 +68,25 @@ const routes = [
     component: StyleForm,
     props: true,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('../views/Categories.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/categories/new',
+    name: 'CategoryNew',
+    component: () => import('../views/CategoryForm.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/categories/:id/edit',
+    name: 'CategoryEdit',
+    component: () => import('../views/CategoryForm.vue'),
+    props: true,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -78,7 +97,7 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   const isAuthenticated = apiService.isAuthenticated()
-  
+
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: 'Login' })
   } else if (to.meta.requiresGuest && isAuthenticated) {

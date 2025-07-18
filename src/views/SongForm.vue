@@ -70,6 +70,24 @@
               ></v-text-field>
             </v-col>
           </v-row>
+
+          <v-row>
+            <v-col cols="12">
+              <v-select
+                v-model="song.category_ids"
+                :items="categories"
+                item-title="name"
+                item-value="id"
+                label="Categories"
+                variant="outlined"
+                multiple
+                chips
+                clearable
+                hint="Select one or more categories for this song"
+                persistent-hint
+              ></v-select>
+            </v-col>
+          </v-row>
           
           <v-row>
             <v-col cols="12">
@@ -126,7 +144,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RichTextEditor from '../components/RichTextEditor.vue'
-import apiService, { type Style } from '@/services/api'
+import apiService, { type Style, type Category } from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,24 +162,31 @@ const song = reactive({
   youtube: '',
   description: '',
   lyrics: '',
-  music_notes: ''
+  music_notes: '',
+  category_ids: [] as number[]
 })
 
 const styles = ref<Style[]>([])
+const categories = ref<Category[]>([])
 
 onMounted(() => {
-  fetchStyles()
+  fetchData()
   if (isEditing.value) {
     loadSong()
   }
 })
 
-async function fetchStyles() {
+async function fetchData() {
   try {
-    styles.value = await apiService.getStyles()
+    const [stylesData, categoriesResponse] = await Promise.all([
+      apiService.getStyles(),
+      apiService.getCategories(1, '') // Get first page with no search filter
+    ])
+    styles.value = stylesData
+    categories.value = categoriesResponse.data || []
   } catch (err) {
-    error.value = 'Failed to load styles. Please try again.'
-    console.error('Error fetching styles:', err)
+    error.value = 'Failed to load data. Please try again.'
+    console.error('Error fetching data:', err)
   }
 }
 
@@ -177,7 +202,10 @@ async function loadSong() {
   
   try {
     const existingSong = await apiService.getSong(songId)
-    Object.assign(song, existingSong)
+    Object.assign(song, {
+      ...existingSong,
+      category_ids: existingSong.categories?.map(c => c.id) || []
+    })
   } catch (err) {
     error.value = 'Failed to load song. Please try again.'
     console.error('Error loading song:', err)
@@ -201,28 +229,23 @@ async function saveSong() {
   error.value = ''
   
   try {
+    const songData = {
+      title: song.title,
+      song_writer: song.song_writer,
+      style_id: song.style_id!,
+      youtube: song.youtube,
+      description: song.description,
+      lyrics: song.lyrics,
+      music_notes: song.music_notes,
+      category_ids: song.category_ids
+    }
+
     if (isEditing.value && song.id) {
       // Update existing song
-      await apiService.updateSong(song.id, {
-        title: song.title,
-        song_writer: song.song_writer,
-        style_id: song.style_id!,
-        youtube: song.youtube,
-        description: song.description,
-        lyrics: song.lyrics,
-        music_notes: song.music_notes
-      })
+      await apiService.updateSong(song.id, songData)
     } else {
       // Create new song
-      await apiService.createSong({
-        title: song.title,
-        song_writer: song.song_writer,
-        style_id: song.style_id!,
-        youtube: song.youtube,
-        description: song.description,
-        lyrics: song.lyrics,
-        music_notes: song.music_notes
-      })
+      await apiService.createSong(songData)
     }
     
     router.push({ path: '/songs', query: { page: route.query.page } })

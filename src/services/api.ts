@@ -35,6 +35,7 @@ interface Song {
   style_id: number;
   lyrics?: string;
   music_notes?: string;
+  categories?: Category[];
   created_at: string;
   updated_at: string;
 }
@@ -50,6 +51,15 @@ interface PaginatedResponse<T> {
 interface Style {
   id: number;
   name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
   created_at: string;
   updated_at: string;
 }
@@ -190,10 +200,43 @@ class ApiService {
     });
   }
 
+  async getCategories(page: number = 1, search?: string): Promise<PaginatedResponse<Category>> {
+    const params = new URLSearchParams()
+    params.append('page', String(page))
+    if (search) {
+      params.append('search', search)
+    }
+    return this.request<PaginatedResponse<Category>>(`/categories?${params.toString()}`)
+  }
+
+  async createCategory(category: Omit<Category, 'id' | 'slug' | 'created_at' | 'updated_at'>): Promise<Category> {
+    return this.request<Category>('/categories', {
+      method: 'POST',
+      body: JSON.stringify(category),
+    });
+  }
+
+  async getCategory(id: number): Promise<Category> {
+    return this.request<Category>(`/categories/${id}`);
+  }
+
+  async updateCategory(id: number, category: Partial<Omit<Category, 'id' | 'slug' | 'created_at' | 'updated_at'>>): Promise<Category> {
+    return this.request<Category>(`/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(category),
+    });
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    return this.request<void>(`/categories/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   isAuthenticated(): boolean {
     return !!this.token;
   }
 }
 
 export default new ApiService();
-export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, PaginatedResponse };
+export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, Category, PaginatedResponse };

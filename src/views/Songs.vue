@@ -52,6 +52,7 @@
               <th>Title</th>
               <th class="d-none d-md-table-cell">Song Writer</th>
               <th>Style</th>
+              <th class="d-none d-lg-table-cell">Categories</th>
               <th class="d-none d-lg-table-cell">Description</th>
               <th class="d-none d-sm-table-cell">YouTube</th>
               <th>Actions</th>
@@ -59,14 +60,15 @@
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3">
+              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4">
                 <div class="d-flex flex-column ga-4 pa-4">
                   <template v-for="i in 5" :key="i">
                     <div class="d-flex ga-4">
                       <v-skeleton-loader type="text" width="20%"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%" class="d-none d-md-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%"></v-skeleton-loader>
-                      <v-skeleton-loader type="text" width="25%" class="d-none d-lg-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="15%" class="d-none d-lg-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="20%" class="d-none d-lg-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="10%" class="d-none d-sm-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="button" width="15%"></v-skeleton-loader>
                     </div>
@@ -75,7 +77,7 @@
               </td>
             </tr>
             <tr v-else-if="songsWithStyles.length === 0">
-              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3" class="text-center py-8 text-medium-emphasis">
+              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4" class="text-center py-8 text-medium-emphasis">
                 {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
               </td>
             </tr>
@@ -88,6 +90,20 @@
               </td>
               <td class="d-none d-md-table-cell">{{ song.song_writer || '-' }}</td>
               <td>{{ song.style }}</td>
+              <td class="d-none d-lg-table-cell">
+                <div v-if="song.categories && song.categories.length > 0" class="d-flex flex-wrap ga-1">
+                  <v-chip
+                    v-for="category in song.categories"
+                    :key="category.id"
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                  >
+                    {{ category.name }}
+                  </v-chip>
+                </div>
+                <span v-else class="text-medium-emphasis">-</span>
+              </td>
               <td class="d-none d-lg-table-cell">
                 <span class="text-truncate d-inline-block" style="max-width: 200px">
                   {{ song.description || '-' }}
