@@ -62,7 +62,7 @@
             <tr v-if="loading">
               <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4">
                 <div class="d-flex flex-column ga-4 pa-4">
-                  <template v-for="i in 5" :key="i">
+                  <template v-for="_i in 5" :key="_i">
                     <div class="d-flex ga-4">
                       <v-skeleton-loader type="text" width="20%"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%" class="d-none d-md-flex"></v-skeleton-loader>
