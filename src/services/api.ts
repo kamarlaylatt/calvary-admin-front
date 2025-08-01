@@ -75,6 +75,7 @@ class ApiService {
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
 
     if (this.token) {
@@ -97,6 +98,11 @@ class ApiService {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        this.token = null;
+        localStorage.removeItem('admin_token');
+        window.location.href = '/login';
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 

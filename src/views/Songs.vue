@@ -232,7 +232,7 @@ async function fetchSongs() {
     songs.value = response.data
     totalPages.value = response.last_page
   } catch (err) {
-    error.value = 'Failed to load songs. Please try again.'
+    error.value = 'Failed to load songs. ' + (err instanceof Error ? err.message : 'Please try again.')
     console.error('Error fetching songs:', err)
   } finally {
     loading.value = false
