@@ -72,7 +72,7 @@
           </v-row>
 
           <v-row>
-            <v-col cols="12">
+            <v-col cols="12" md="6">
               <v-select
                 v-model="song.category_ids"
                 :items="categories"
@@ -86,6 +86,18 @@
                 hint="Select one or more categories for this song"
                 persistent-hint
               ></v-select>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-rating
+                v-model="song.popular_rating"
+                label="Popular Rating"
+                color="amber"
+                hover
+                clearable
+              ></v-rating>
+              <v-label class="text-caption text-medium-emphasis mt-1">
+                Rate the popularity of this song (1-5 stars)
+              </v-label>
             </v-col>
           </v-row>
           
@@ -144,7 +156,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RichTextEditor from '../components/RichTextEditor.vue'
-import apiService, { type Style, type Category } from '@/services/api'
+import apiService, { type Style, type Category, type CreateSongRequest, type UpdateSongRequest } from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -163,6 +175,7 @@ const song = reactive({
   description: '',
   lyrics: '',
   music_notes: '',
+  popular_rating: null as number | null,
   category_ids: [] as number[]
 })
 
@@ -229,7 +242,7 @@ async function saveSong() {
   error.value = ''
   
   try {
-    const songData = {
+    const songData: CreateSongRequest | UpdateSongRequest = {
       title: song.title,
       song_writer: song.song_writer,
       style_id: song.style_id!,
@@ -237,15 +250,16 @@ async function saveSong() {
       description: song.description,
       lyrics: song.lyrics,
       music_notes: song.music_notes,
+      popular_rating: song.popular_rating,
       category_ids: song.category_ids
     }
 
     if (isEditing.value && song.id) {
       // Update existing song
-      await apiService.updateSong(song.id, songData)
+      await apiService.updateSong(song.id, songData as UpdateSongRequest)
     } else {
       // Create new song
-      await apiService.createSong(songData)
+      await apiService.createSong(songData as CreateSongRequest)
     }
     
     router.push({ path: '/songs', query: { page: route.query.page } })

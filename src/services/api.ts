@@ -28,6 +28,24 @@ interface AdminProfile {
 
 interface Song {
   id: number;
+  admin_id: number;
+  style_id: number;
+  code: number;
+  slug: string;
+  title: string;
+  youtube?: string;
+  description?: string;
+  song_writer?: string;
+  lyrics?: string;
+  music_notes?: string;
+  popular_rating?: number;
+  created_at: string;
+  updated_at: string;
+  style?: Style;
+  categories?: Category[];
+}
+
+interface CreateSongRequest {
   title: string;
   youtube?: string;
   description?: string;
@@ -35,9 +53,20 @@ interface Song {
   style_id: number;
   lyrics?: string;
   music_notes?: string;
-  categories?: Category[];
-  created_at: string;
-  updated_at: string;
+  popular_rating?: number;
+  category_ids?: number[];
+}
+
+interface UpdateSongRequest {
+  title?: string;
+  youtube?: string;
+  description?: string;
+  song_writer?: string;
+  style_id?: number;
+  lyrics?: string;
+  music_notes?: string;
+  popular_rating?: number;
+  category_ids?: number[];
 }
 
 interface PaginatedResponse<T> {
@@ -154,7 +183,7 @@ class ApiService {
     return this.request<PaginatedResponse<Song>>(`/songs?${params.toString()}`)
   }
 
-  async createSong(song: Omit<Song, 'id' | 'created_at' | 'updated_at'>): Promise<Song> {
+  async createSong(song: CreateSongRequest): Promise<Song> {
     return this.request<Song>('/songs', {
       method: 'POST',
       body: JSON.stringify(song),
@@ -165,7 +194,7 @@ class ApiService {
     return this.request<Song>(`/songs/${id}`);
   }
 
-  async updateSong(id: number, song: Partial<Omit<Song, 'id' | 'created_at' | 'updated_at'>>): Promise<Song> {
+  async updateSong(id: number, song: UpdateSongRequest): Promise<Song> {
     return this.request<Song>(`/songs/${id}`, {
       method: 'PUT',
       body: JSON.stringify(song),
@@ -245,4 +274,4 @@ class ApiService {
 }
 
 export default new ApiService();
-export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, Category, PaginatedResponse };
+export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, Category, PaginatedResponse, CreateSongRequest, UpdateSongRequest };

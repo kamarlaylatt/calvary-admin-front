@@ -50,25 +50,23 @@
           <thead>
             <tr>
               <th>Title</th>
-              <th class="d-none d-md-table-cell">Song Writer</th>
               <th>Style</th>
               <th class="d-none d-lg-table-cell">Categories</th>
-              <th class="d-none d-lg-table-cell">Description</th>
+              <th class="d-none d-sm-table-cell">Rating</th>
               <th class="d-none d-sm-table-cell">YouTube</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4">
+              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3">
                 <div class="d-flex flex-column ga-4 pa-4">
                   <template v-for="_i in 5" :key="_i">
                     <div class="d-flex ga-4">
                       <v-skeleton-loader type="text" width="20%"></v-skeleton-loader>
-                      <v-skeleton-loader type="text" width="15%" class="d-none d-md-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%" class="d-none d-lg-flex"></v-skeleton-loader>
-                      <v-skeleton-loader type="text" width="20%" class="d-none d-lg-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="10%" class="d-none d-sm-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="10%" class="d-none d-sm-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="button" width="15%"></v-skeleton-loader>
                     </div>
@@ -77,7 +75,7 @@
               </td>
             </tr>
             <tr v-else-if="songsWithStyles.length === 0">
-              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4" class="text-center py-8 text-medium-emphasis">
+              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3" class="text-center py-8 text-medium-emphasis">
                 {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
               </td>
             </tr>
@@ -88,8 +86,7 @@
                   {{ song.song_writer || 'Unknown writer' }}
                 </div>
               </td>
-              <td class="d-none d-md-table-cell">{{ song.song_writer || '-' }}</td>
-              <td>{{ song.style }}</td>
+              <td>{{ song.styleName }}</td>
               <td class="d-none d-lg-table-cell">
                 <div v-if="song.categories && song.categories.length > 0" class="d-flex flex-wrap ga-1">
                   <v-chip
@@ -104,10 +101,18 @@
                 </div>
                 <span v-else class="text-medium-emphasis">-</span>
               </td>
-              <td class="d-none d-lg-table-cell">
-                <span class="text-truncate d-inline-block" style="max-width: 200px">
-                  {{ song.description || '-' }}
-                </span>
+              <td class="d-none d-sm-table-cell">
+                <div v-if="song.popular_rating" class="d-flex align-center">
+                  <v-rating
+                    :model-value="song.popular_rating"
+                    readonly
+                    size="small"
+                    density="compact"
+                    color="amber"
+                  ></v-rating>
+                  <span class="text-caption ml-1">({{ song.popular_rating }})</span>
+                </div>
+                <span v-else class="text-medium-emphasis">-</span>
               </td>
               <td class="d-none d-sm-table-cell">
                 <v-btn
@@ -201,7 +206,7 @@ const styles = ref<Style[]>([])
 const songsWithStyles = computed(() => {
   return songs.value.map(song => ({
     ...song,
-    style: styles.value.find(style => style.id === song.style_id)?.name || 'Unknown'
+    styleName: styles.value.find(style => style.id === song.style_id)?.name || 'Unknown'
   }))
 })
 
