@@ -57,8 +57,9 @@
                 item-value="id"
                 label="Style"
                 variant="outlined"
-                required
-                :rules="[v => !!v || 'Style is required']"
+                clearable
+                :hint="'Optional'"
+                persistent-hint
               ></v-select>
             </v-col>
             <v-col cols="12" md="6">
@@ -170,12 +171,12 @@ const song = reactive({
   id: null as number | null,
   title: '',
   song_writer: '',
-  style_id: null as number | null,
+  style_id: undefined as number | undefined,
   youtube: '',
   description: '',
   lyrics: '',
   music_notes: '',
-  popular_rating: null as number | null,
+  popular_rating: undefined as number | undefined,
   category_ids: [] as number[]
 })
 
@@ -217,6 +218,8 @@ async function loadSong() {
     const existingSong = await apiService.getSong(songId)
     Object.assign(song, {
       ...existingSong,
+      style_id: existingSong.style_id ?? undefined,
+      popular_rating: existingSong.popular_rating ?? undefined,
       category_ids: existingSong.categories?.map(c => c.id) || []
     })
   } catch (err) {
@@ -234,8 +237,7 @@ async function saveSong() {
   }
   
   if (!song.style_id) {
-    error.value = 'Style is required.'
-    return
+    // Allow nullable style
   }
   
   saving.value = true
@@ -245,7 +247,7 @@ async function saveSong() {
     const songData: CreateSongRequest | UpdateSongRequest = {
       title: song.title,
       song_writer: song.song_writer,
-      style_id: song.style_id!,
+      style_id: song.style_id ?? null,
       youtube: song.youtube,
       description: song.description,
       lyrics: song.lyrics,

@@ -29,7 +29,7 @@ interface AdminProfile {
 interface Song {
   id: number;
   admin_id: number;
-  style_id: number;
+  style_id: number | null;
   code: number;
   slug: string;
   title: string;
@@ -50,7 +50,7 @@ interface CreateSongRequest {
   youtube?: string;
   description?: string;
   song_writer?: string;
-  style_id: number;
+  style_id?: number | null;
   lyrics?: string;
   music_notes?: string;
   popular_rating?: number;
@@ -62,7 +62,7 @@ interface UpdateSongRequest {
   youtube?: string;
   description?: string;
   song_writer?: string;
-  style_id?: number;
+  style_id?: number | null;
   lyrics?: string;
   music_notes?: string;
   popular_rating?: number;
