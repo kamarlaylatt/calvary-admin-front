@@ -207,7 +207,7 @@ async function loadDashboardData() {
     songsCount.value = songsResponse.total
     recentSongs.value = songsResponse.data.slice(0, 5).map(song => ({
       ...song,
-      styleName: stylesMap.value.get(song.style_id) || 'Unknown'
+      styleName: typeof song.style_id === 'number' ? stylesMap.value.get(song.style_id) || 'Unknown' : 'Unknown'
     }))
 
     // Load categories count and recent categories
