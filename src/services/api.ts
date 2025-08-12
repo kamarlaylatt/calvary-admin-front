@@ -93,6 +93,13 @@ interface Category {
   updated_at: string;
 }
 
+interface SongLanguage {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 class ApiService {
   private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/admin';
   private token: string | null = null;
@@ -268,10 +275,38 @@ class ApiService {
     });
   }
 
+  async getSongLanguages(): Promise<SongLanguage[]> {
+    return this.request<SongLanguage[]>('/song-languages');
+  }
+
+  async createSongLanguage(songLanguage: Omit<SongLanguage, 'id' | 'created_at' | 'updated_at'>): Promise<SongLanguage> {
+    return this.request<SongLanguage>('/song-languages', {
+      method: 'POST',
+      body: JSON.stringify(songLanguage),
+    });
+  }
+
+  async getSongLanguage(id: string): Promise<SongLanguage> {
+    return this.request<SongLanguage>(`/song-languages/${id}`);
+  }
+
+  async updateSongLanguage(id: string, songLanguage: Partial<Omit<SongLanguage, 'id' | 'created_at' | 'updated_at'>>): Promise<SongLanguage> {
+    return this.request<SongLanguage>(`/song-languages/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(songLanguage),
+    });
+  }
+
+  async deleteSongLanguage(id: number): Promise<void> {
+    return this.request<void>(`/song-languages/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   isAuthenticated(): boolean {
     return !!this.token;
   }
 }
 
 export default new ApiService();
-export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, Category, PaginatedResponse, CreateSongRequest, UpdateSongRequest };
+export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, Category, SongLanguage, PaginatedResponse, CreateSongRequest, UpdateSongRequest };

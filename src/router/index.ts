@@ -87,6 +87,25 @@ const routes = [
     component: () => import('../views/CategoryForm.vue'),
     props: true,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/song-languages',
+    name: 'SongLanguages',
+    component: () => import('../views/SongLanguages.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/song-languages/new',
+    name: 'SongLanguageNew',
+    component: () => import('../views/SongLanguageForm.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/song-languages/:id/edit',
+    name: 'SongLanguageEdit',
+    component: () => import('../views/SongLanguageForm.vue'),
+    props: true,
+    meta: { requiresAuth: true }
   }
 ]
 

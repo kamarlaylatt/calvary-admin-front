@@ -54,6 +54,10 @@ function expandFromRail() {
   }
 }
 
+function navigateTo(path: string) {
+  router.push(path)
+}
+
 const handleLogout = async () => {
   try {
     await logout()
@@ -90,11 +94,12 @@ const handleLogout = async () => {
       <v-divider></v-divider>
 
       <v-list density="compact" nav>
-        <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="$router.push('/dashboard')"></v-list-item>
-        <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="$router.push('/songs')"></v-list-item>
-        <v-list-item prepend-icon="mdi-tag" title="Categories" value="categories" @click="$router.push('/categories')"></v-list-item>
-        <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="$router.push('/styles')"></v-list-item>
-        <v-list-item prepend-icon="mdi-account" title="Profile" value="profile" @click="$router.push('/profile')"></v-list-item>
+        <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="navigateTo('/dashboard')"></v-list-item>
+        <v-list-item prepend-icon="mdi-tag" title="Categories" value="categories" @click="navigateTo('/categories')"></v-list-item>
+        <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="navigateTo('/styles')"></v-list-item>
+        <v-list-item prepend-icon="mdi-translate" title="Song Languages" value="song-languages" @click="navigateTo('/song-languages')"></v-list-item>
+        <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="navigateTo('/songs')"></v-list-item>
+        <v-list-item prepend-icon="mdi-account" title="Profile" value="profile" @click="navigateTo('/profile')"></v-list-item>
       </v-list>
       
       <template v-slot:append>

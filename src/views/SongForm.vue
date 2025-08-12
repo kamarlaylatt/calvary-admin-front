@@ -89,6 +89,21 @@
               ></v-select>
             </v-col>
             <v-col cols="12" md="6">
+              <v-select
+                v-model="song.song_language_ids"
+                :items="songLanguages"
+                item-title="name"
+                item-value="id"
+                label="Song Languages"
+                variant="outlined"
+                multiple
+                chips
+                clearable
+                hint="Select one or more languages for this song"
+                persistent-hint
+              ></v-select>
+            </v-col>
+            <v-col cols="12" md="6">
               <v-rating
                 v-model="song.popular_rating"
                 label="Popular Rating"
@@ -157,7 +172,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import RichTextEditor from '../components/RichTextEditor.vue'
-import apiService, { type Style, type Category, type CreateSongRequest, type UpdateSongRequest } from '@/services/api'
+import apiService, { type Style, type Category, type SongLanguage, type CreateSongRequest, type UpdateSongRequest } from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -177,11 +192,13 @@ const song = reactive({
   lyrics: '',
   music_notes: '',
   popular_rating: undefined as number | undefined,
-  category_ids: [] as number[]
+  category_ids: [] as number[],
+  song_language_ids: [] as number[]
 })
 
 const styles = ref<Style[]>([])
 const categories = ref<Category[]>([])
+const songLanguages = ref<SongLanguage[]>([])
 
 onMounted(() => {
   fetchData()
@@ -192,12 +209,14 @@ onMounted(() => {
 
 async function fetchData() {
   try {
-    const [stylesData, categoriesResponse] = await Promise.all([
+    const [stylesData, categoriesResponse, songLanguagesData] = await Promise.all([
       apiService.getStyles(),
-      apiService.getCategories(1, '') // Get first page with no search filter
+      apiService.getCategories(1, ''), // Get first page with no search filter
+      apiService.getSongLanguages()
     ])
     styles.value = stylesData
     categories.value = categoriesResponse.data || []
+    songLanguages.value = songLanguagesData
   } catch (err) {
     error.value = 'Failed to load data. Please try again.'
     console.error('Error fetching data:', err)
@@ -220,7 +239,8 @@ async function loadSong() {
       ...existingSong,
       style_id: existingSong.style_id ?? undefined,
       popular_rating: existingSong.popular_rating ?? undefined,
-      category_ids: existingSong.categories?.map(c => c.id) || []
+      category_ids: existingSong.categories?.map(c => c.id) || [],
+      song_language_ids: existingSong.song_languages?.map(l => l.id) || []
     })
   } catch (err) {
     error.value = 'Failed to load song. Please try again.'
@@ -253,7 +273,8 @@ async function saveSong() {
       lyrics: song.lyrics,
       music_notes: song.music_notes,
       popular_rating: song.popular_rating,
-      category_ids: song.category_ids
+      category_ids: song.category_ids,
+      song_language_ids: song.song_language_ids
     }
 
     if (isEditing.value && song.id) {
