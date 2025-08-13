@@ -55,6 +55,7 @@ interface CreateSongRequest {
   music_notes?: string;
   popular_rating?: number;
   category_ids?: number[];
+  song_language_ids?: number[];
 }
 
 interface UpdateSongRequest {
