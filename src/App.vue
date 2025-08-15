@@ -9,7 +9,7 @@ import type { AdminProfile } from '@/services/api'
 const { mdAndUp } = useDisplay()
 const router = useRouter()
 const route = useRoute()
-const { isAuthenticated, logout } = useAuth()
+const { isAuthenticated, logout, isSuperAdmin } = useAuth()
 
 const drawer = ref(true)
 const rail = ref(false)
@@ -95,6 +95,7 @@ const handleLogout = async () => {
 
       <v-list density="compact" nav>
         <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="navigateTo('/dashboard')"></v-list-item>
+        <v-list-item v-if="isSuperAdmin" prepend-icon="mdi-account-group" title="Admins" value="admins" @click="navigateTo('/admins')"></v-list-item>
         <v-list-item prepend-icon="mdi-tag" title="Categories" value="categories" @click="navigateTo('/categories')"></v-list-item>
         <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="navigateTo('/styles')"></v-list-item>
         <v-list-item prepend-icon="mdi-translate" title="Song Languages" value="song-languages" @click="navigateTo('/song-languages')"></v-list-item>

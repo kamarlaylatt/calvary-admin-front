@@ -6,6 +6,8 @@ import Styles from '../views/Styles.vue'
 import StyleForm from '../views/StyleForm.vue'
 import Login from '../views/Login.vue'
 import Profile from '../views/Profile.vue'
+import Admins from '../views/Admins.vue'
+import AdminForm from '../views/AdminForm.vue'
 import apiService from '@/services/api'
 
 const routes = [
@@ -30,6 +32,25 @@ const routes = [
     name: 'Profile',
     component: Profile,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admins',
+    name: 'Admins',
+    component: Admins,
+    meta: { requiresAuth: true, requiresSuperAdmin: true }
+  },
+  {
+    path: '/admins/new',
+    name: 'AdminNew',
+    component: AdminForm,
+    meta: { requiresAuth: true, requiresSuperAdmin: true }
+  },
+  {
+    path: '/admins/:id/edit',
+    name: 'AdminEdit',
+    component: AdminForm,
+    props: true,
+    meta: { requiresAuth: true, requiresSuperAdmin: true }
   },
   {
     path: '/songs',
@@ -120,6 +141,8 @@ router.beforeEach((to, _from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: 'Login' })
   } else if (to.meta.requiresGuest && isAuthenticated) {
+    next({ name: 'Dashboard' })
+  } else if (to.meta.requiresSuperAdmin && !apiService.isAdmin()) {
     next({ name: 'Dashboard' })
   } else {
     next()

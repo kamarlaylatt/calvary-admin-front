@@ -24,7 +24,15 @@ This documentation provides details about the available API endpoints for admini
       "name": "Admin Name",
       "email": "admin@example.com",
       "created_at": "2025-07-17T05:50:20.000000Z",
-      "updated_at": "2025-07-17T05:50:20.000000Z"
+      "updated_at": "2025-07-17T05:50:20.000000Z",
+      "roles": [
+        {
+          "id": 1,
+          "name": "Super Admin",
+          "created_at": "2025-08-14T17:51:19.000000Z",
+          "updated_at": "2025-08-14T17:51:19.000000Z"
+        }
+      ]
     },
     "token": "your-api-token"
   }
@@ -55,7 +63,15 @@ This documentation provides details about the available API endpoints for admini
       "name": "Admin Name",
       "email": "admin@example.com",
       "created_at": "2025-07-17T05:50:20.000000Z",
-      "updated_at": "2025-07-17T05:50:20.000000Z"
+      "updated_at": "2025-07-17T05:50:20.000000Z",
+      "roles": [
+        {
+          "id": 1,
+          "name": "Super Admin",
+          "created_at": "2025-08-14T17:51:19.000000Z",
+          "updated_at": "2025-08-14T17:51:19.000000Z"
+        }
+      ]
     }
   }
   ```
@@ -783,3 +799,28 @@ This documentation provides details about the available API endpoints for admini
 - **Description:** Deletes a song language.
 - **Authentication:** Bearer Token
 - **Response:** `204 No Content`
+
+## Roles
+
+### List Roles
+
+- **Endpoint:** `GET /api/admin/roles`
+- **Description:** Retrieves a list of all roles.
+- **Authentication:** Bearer Token
+- **Response:** A JSON array of role objects:
+  ```json
+  [
+    {
+      "id": 1,
+      "name": "Super Admin",
+      "created_at": "2025-08-14T17:51:19.000000Z",
+      "updated_at": "2025-08-14T17:51:19.000000Z"
+    },
+    {
+      "id": 2,
+      "name": "Admin",
+      "created_at": "2025-08-14T17:51:19.000000Z",
+      "updated_at": "2025-08-14T17:51:19.000000Z"
+    }
+  ]
+  ```

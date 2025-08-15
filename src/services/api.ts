@@ -5,6 +5,15 @@ interface LoginCredentials {
 
 interface LoginResponse {
   token: string;
+  admin: {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    created_at: string;
+    updated_at: string;
+    roles: Role[];
+  };
 }
 
 interface AdminProfileResponse {
@@ -15,6 +24,7 @@ interface AdminProfileResponse {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    roles: Role[];
   };
 }
 
@@ -24,6 +34,44 @@ interface AdminProfile {
   email: string;
   created_at: string;
   updated_at: string;
+}
+
+interface Admin extends AdminProfile {
+  status: string;
+  roles?: Role[];
+}
+
+interface Role {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CreateAdminRequest {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  status: string;
+  roles?: number[];
+}
+
+interface UpdateAdminRequest {
+  name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+  status?: string;
+  roles?: number[];
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
 }
 
 interface Song {
@@ -140,7 +188,8 @@ class ApiService {
         localStorage.removeItem('admin_token');
         window.location.href = '/login';
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     if (response.status === 204) {
@@ -158,6 +207,9 @@ class ApiService {
 
     this.token = response.token;
     localStorage.setItem('admin_token', response.token);
+    
+    // Store admin details with roles
+    localStorage.setItem('admin_details', JSON.stringify(response.admin));
 
     return response;
   }
@@ -173,6 +225,8 @@ class ApiService {
 
   async getAdminDetail(): Promise<AdminProfile> {
     const response = await this.request<AdminProfileResponse>('');
+    // Store admin details with roles
+    localStorage.setItem('admin_details', JSON.stringify(response.admin));
     return {
       id: response.admin.id,
       name: response.admin.name,
@@ -180,6 +234,39 @@ class ApiService {
       created_at: response.admin.created_at,
       updated_at: response.admin.updated_at
     };
+  }
+
+  async getAdmins(page: number = 1, search?: string): Promise<PaginatedResponse<Admin>> {
+    const params = new URLSearchParams();
+    params.append('page', String(page));
+    if (search) {
+      params.append('search', search);
+    }
+    return this.request<PaginatedResponse<Admin>>(`/admins?${params.toString()}`);
+  }
+
+  async createAdmin(admin: CreateAdminRequest): Promise<Admin> {
+    return this.request<Admin>('/admins', {
+      method: 'POST',
+      body: JSON.stringify(admin),
+    });
+  }
+
+  async getAdmin(id: number): Promise<Admin> {
+    return this.request<Admin>(`/admins/${id}`);
+  }
+
+  async updateAdmin(id: number, admin: UpdateAdminRequest): Promise<Admin> {
+    return this.request<Admin>(`/admins/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(admin),
+    });
+  }
+
+  async deleteAdmin(id: number): Promise<void> {
+    return this.request<void>(`/admins/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   async getSongs(
@@ -340,10 +427,26 @@ class ApiService {
     });
   }
 
+  async getRoles(): Promise<Role[]> {
+    return this.request<Role[]>('/roles');
+  }
+
   isAuthenticated(): boolean {
     return !!this.token;
+  }
+  
+  isAdmin(): boolean {
+    try {
+      const adminDetails = localStorage.getItem('admin_details');
+      if (!adminDetails) return false;
+      
+      const admin = JSON.parse(adminDetails);
+      return Array.isArray(admin.roles) && admin.roles.some((role: Role) => role.id === 1);
+    } catch (e) {
+      return false;
+    }
   }
 }
 
 export default new ApiService();
-export type { LoginCredentials, LoginResponse, AdminProfile, Song, Style, Category, SongLanguage, PaginatedResponse, CreateSongRequest, UpdateSongRequest };
+export type { LoginCredentials, LoginResponse, AdminProfile, Admin, Role, Song, Style, Category, SongLanguage, PaginatedResponse, CreateSongRequest, UpdateSongRequest, CreateAdminRequest, UpdateAdminRequest };

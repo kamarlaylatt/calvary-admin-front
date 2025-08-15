@@ -10,7 +10,7 @@
 
     <!-- Essential Metrics Cards -->
     <v-row class="mb-6">
-      <v-col cols="12" sm="4">
+      <v-col cols="12" sm="3">
         <v-card elevation="2" class="h-100">
           <v-card-text>
             <div v-if="loading" class="d-flex justify-space-between align-center">
@@ -33,7 +33,7 @@
         </v-card>
       </v-col>
       
-      <v-col cols="12" sm="4">
+      <v-col cols="12" sm="3">
         <v-card elevation="2" class="h-100">
           <v-card-text>
             <div v-if="loading" class="d-flex justify-space-between align-center">
@@ -56,7 +56,7 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" sm="4">
+      <v-col cols="12" sm="3">
         <v-card elevation="2" class="h-100">
           <v-card-text>
             <div v-if="loading" class="d-flex justify-space-between align-center">
@@ -78,11 +78,34 @@
           </v-card-text>
         </v-card>
       </v-col>
+      
+      <v-col cols="12" sm="3">
+        <v-card elevation="2" class="h-100">
+          <v-card-text>
+            <div v-if="loading" class="d-flex justify-space-between align-center">
+              <div>
+                <v-skeleton-loader type="text" width="80" class="mb-1"></v-skeleton-loader>
+                <v-skeleton-loader type="heading" width="60"></v-skeleton-loader>
+              </div>
+              <v-skeleton-loader type="avatar" size="48"></v-skeleton-loader>
+            </div>
+            <div v-else class="d-flex justify-space-between align-center">
+              <div>
+                <p class="text-caption text-medium-emphasis mb-1">Total Admins</p>
+                <h3 class="text-h4">{{ adminsCount }}</h3>
+              </div>
+              <v-avatar color="warning" size="48">
+                <v-icon>mdi-account-group</v-icon>
+              </v-avatar>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
     </v-row>
 
     <!-- Recent Items -->
     <v-row>
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
         <v-card elevation="2">
           <v-card-title class="bg-surface">
             <span>Recent Songs</span>
@@ -112,7 +135,7 @@
         </v-card>
       </v-col>
       
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
         <v-card elevation="2">
           <v-card-title class="bg-surface">
             <span>Recent Styles</span>
@@ -141,7 +164,7 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
         <v-card elevation="2">
           <v-card-title class="bg-surface">
             <span>Recent Categories</span>
@@ -170,20 +193,52 @@
           </v-card-text>
         </v-card>
       </v-col>
+      
+      <v-col cols="12" md="3">
+        <v-card elevation="2">
+          <v-card-title class="bg-surface">
+            <span>Recent Admins</span>
+          </v-card-title>
+          <v-card-text class="pa-0">
+            <div v-if="loading" class="pa-4">
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+              <v-skeleton-loader type="list-item-two-line" class="mb-2"></v-skeleton-loader>
+            </div>
+            <v-list v-else-if="recentAdmins.length > 0">
+              <v-list-item
+                v-for="admin in recentAdmins"
+                :key="admin.id"
+                :title="admin.name"
+                :subtitle="admin.email"
+              >
+                <template v-slot:prepend>
+                  <v-icon color="warning">mdi-account</v-icon>
+                </template>
+              </v-list-item>
+            </v-list>
+            <div v-else class="text-center pa-4 text-medium-emphasis">
+              No admins available
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import apiService, { type Song, type Style, type Category } from '@/services/api'
+import apiService, { type Song, type Style, type Category, type Admin } from '@/services/api'
 
 const songsCount = ref(0)
 const stylesCount = ref(0)
 const categoriesCount = ref(0)
+const adminsCount = ref(0)
 const recentSongs = ref<(Song & { styleName?: string })[]>([])
 const recentStyles = ref<Style[]>([])
 const recentCategories = ref<Category[]>([])
+const recentAdmins = ref<Admin[]>([])
 const loading = ref(true)
 const stylesMap = ref<Map<number, string>>(new Map())
 
@@ -214,6 +269,11 @@ async function loadDashboardData() {
     const categoriesResponse = await apiService.getCategories(1)
     categoriesCount.value = categoriesResponse.total
     recentCategories.value = categoriesResponse.data.slice(0, 5)
+    
+    // Load admins count and recent admins
+    const adminsResponse = await apiService.getAdmins(1)
+    adminsCount.value = adminsResponse.total
+    recentAdmins.value = adminsResponse.data.slice(0, 5)
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
