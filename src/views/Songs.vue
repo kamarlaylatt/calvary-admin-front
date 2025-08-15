@@ -28,6 +28,114 @@
       {{ error }}
     </v-alert>
 
+    <!-- Filters Section -->
+    <v-card class="mb-4" elevation="1">
+      <v-card-title class="d-flex justify-space-between align-center py-3">
+        <span class="text-h6">Filters</span>
+        <div class="d-flex align-center ga-2">
+          <v-btn
+            variant="text"
+            size="small"
+            @click="clearFilters"
+            prepend-icon="mdi-filter-remove"
+          >
+            Clear All
+          </v-btn>
+          <v-btn
+            :icon="showFilters ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+            variant="text"
+            size="small"
+            @click="showFilters = !showFilters"
+          ></v-btn>
+        </div>
+      </v-card-title>
+      
+      <v-expand-transition>
+        <div v-show="showFilters">
+          <v-card-text class="pt-0">
+            <v-row>
+              <!-- Style Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedStyleId"
+                  :items="styles"
+                  item-title="name"
+                  item-value="id"
+                  label="Style"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                  hide-details
+                ></v-select>
+              </v-col>
+
+              <!-- Categories Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedCategoryIds"
+                  :items="categories"
+                  item-title="name"
+                  item-value="id"
+                  label="Categories"
+                  variant="outlined"
+                  density="compact"
+                  multiple
+                  clearable
+                  hide-details
+                ></v-select>
+              </v-col>
+
+              <!-- Languages Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedLanguageIds"
+                  :items="songLanguages"
+                  item-title="name"
+                  item-value="id"
+                  label="Languages"
+                  variant="outlined"
+                  density="compact"
+                  multiple
+                  clearable
+                  hide-details
+                ></v-select>
+              </v-col>
+
+              <!-- Sort Options -->
+              <v-col cols="12" sm="6" md="3">
+                <div class="d-flex ga-2">
+                  <v-select
+                    v-model="sortBy"
+                    :items="[
+                      { title: 'Created Date', value: 'created_at' },
+                      { title: 'ID', value: 'id' }
+                    ]"
+                    label="Sort By"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    style="flex: 2;"
+                  ></v-select>
+                  <v-select
+                    v-model="sortOrder"
+                    :items="[
+                      { title: 'Desc', value: 'desc' },
+                      { title: 'Asc', value: 'asc' }
+                    ]"
+                    label="Order"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    style="flex: 1;"
+                  ></v-select>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </div>
+      </v-expand-transition>
+    </v-card>
+
     <v-card elevation="2">
       <v-card-title class="d-flex justify-space-between align-center bg-surface flex-wrap ga-4">
         <span class="flex-shrink-0">All Songs</span>
@@ -49,6 +157,7 @@
         <v-table>
           <thead>
             <tr>
+              <th>ID</th>
               <th>Title</th>
               <th>Style</th>
               <th class="d-none d-lg-table-cell">Categories</th>
@@ -59,7 +168,7 @@
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3">
+              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4">
                 <div class="d-flex flex-column ga-4 pa-4">
                   <template v-for="_i in 5" :key="_i">
                     <div class="d-flex ga-4">
@@ -75,11 +184,12 @@
               </td>
             </tr>
             <tr v-else-if="songsWithStyles.length === 0">
-              <td :colspan="$vuetify.display.lgAndUp ? 6 : $vuetify.display.mdAndUp ? 5 : $vuetify.display.smAndUp ? 4 : 3" class="text-center py-8 text-medium-emphasis">
+              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4" class="text-center py-8 text-medium-emphasis">
                 {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
               </td>
             </tr>
             <tr v-else v-for="song in songsWithStyles" :key="song.id">
+              <td>{{ song.id }}</td>
               <td class="font-weight-medium">
                 <div>{{ song.title }}</div>
                 <div class="text-caption text-medium-emphasis d-md-none">
@@ -188,7 +298,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import apiService, { type Song, type Style } from '@/services/api'
+import apiService, { type Song, type Style, type Category, type SongLanguage } from '@/services/api'
 
 const router = useRouter()
 const search = ref('')
@@ -200,8 +310,18 @@ const error = ref('')
 const page = ref(1)
 const totalPages = ref(1)
 
+// Filter state variables
+const selectedStyleId = ref<number | null>(null)
+const selectedCategoryIds = ref<number[]>([])
+const selectedLanguageIds = ref<number[]>([])
+const sortBy = ref<'created_at' | 'id'>('id')
+const sortOrder = ref<'asc' | 'desc'>('desc')
+const showFilters = ref(false)
+
 const songs = ref<Song[]>([])
 const styles = ref<Style[]>([])
+const categories = ref<Category[]>([])
+const songLanguages = ref<SongLanguage[]>([])
 
 const songsWithStyles = computed(() => {
   return songs.value.map(song => ({
@@ -226,14 +346,30 @@ onMounted(() => {
   }
   fetchSongs()
   fetchStyles()
+  fetchCategories()
+  fetchSongLanguages()
 })
+
+// Watch for filter changes
+watch([selectedStyleId, selectedCategoryIds, selectedLanguageIds, sortBy, sortOrder], () => {
+  page.value = 1
+  fetchSongs()
+}, { deep: true })
 
 async function fetchSongs() {
   loading.value = true
   error.value = ''
   
   try {
-    const response = await apiService.getSongs(page.value, search.value || undefined)
+    const response = await apiService.getSongs(
+      page.value,
+      search.value || undefined,
+      selectedStyleId.value || undefined,
+      selectedCategoryIds.value.length > 0 ? selectedCategoryIds.value : undefined,
+      selectedLanguageIds.value.length > 0 ? selectedLanguageIds.value : undefined,
+      sortBy.value,
+      sortOrder.value
+    )
     songs.value = response.data
     totalPages.value = response.last_page
   } catch (err) {
@@ -250,6 +386,31 @@ async function fetchStyles() {
   } catch (err) {
     console.error('Error fetching styles:', err)
   }
+}
+
+async function fetchCategories() {
+  try {
+    categories.value = await apiService.getAllCategories()
+  } catch (err) {
+    console.error('Error fetching categories:', err)
+  }
+}
+
+async function fetchSongLanguages() {
+  try {
+    songLanguages.value = await apiService.getSongLanguages()
+  } catch (err) {
+    console.error('Error fetching song languages:', err)
+  }
+}
+
+function clearFilters() {
+  selectedStyleId.value = null
+  selectedCategoryIds.value = []
+  selectedLanguageIds.value = []
+  sortBy.value = 'id'
+  sortOrder.value = 'desc'
+  search.value = ''
 }
 
 function editSong(song: Song) {

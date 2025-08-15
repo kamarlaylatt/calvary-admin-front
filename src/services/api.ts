@@ -182,12 +182,42 @@ class ApiService {
     };
   }
 
-  async getSongs(page: number = 1, search?: string): Promise<PaginatedResponse<Song>> {
+  async getSongs(
+    page: number = 1,
+    search?: string,
+    styleId?: number,
+    categoryIds?: number[],
+    songLanguageIds?: number[],
+    sortBy?: 'created_at' | 'id',
+    sortOrder?: 'asc' | 'desc'
+  ): Promise<PaginatedResponse<Song>> {
     const params = new URLSearchParams()
     params.append('page', String(page))
+
     if (search) {
       params.append('search', search)
     }
+
+    if (styleId) {
+      params.append('style_id', String(styleId))
+    }
+
+    if (categoryIds && categoryIds.length > 0) {
+      categoryIds.forEach(id => params.append('category_ids[]', String(id)))
+    }
+
+    if (songLanguageIds && songLanguageIds.length > 0) {
+      songLanguageIds.forEach(id => params.append('song_language_ids[]', String(id)))
+    }
+
+    if (sortBy) {
+      params.append('sort_by', sortBy)
+    }
+
+    if (sortOrder) {
+      params.append('sort_order', sortOrder)
+    }
+
     return this.request<PaginatedResponse<Song>>(`/songs?${params.toString()}`)
   }
 
@@ -241,6 +271,12 @@ class ApiService {
     return this.request<void>(`/styles/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  async getAllCategories(): Promise<Category[]> {
+    // Get all categories without pagination for filter dropdown
+    const response = await this.request<PaginatedResponse<Category>>('/categories?per_page=1000');
+    return response.data;
   }
 
   async getCategories(page: number = 1, search?: string): Promise<PaginatedResponse<Category>> {
