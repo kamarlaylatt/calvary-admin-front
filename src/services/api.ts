@@ -207,7 +207,7 @@ class ApiService {
 
     this.token = response.token;
     localStorage.setItem('admin_token', response.token);
-    
+
     // Store admin details with roles
     localStorage.setItem('admin_details', JSON.stringify(response.admin));
 
@@ -276,7 +276,8 @@ class ApiService {
     categoryIds?: number[],
     songLanguageIds?: number[],
     sortBy?: 'created_at' | 'id',
-    sortOrder?: 'asc' | 'desc'
+    sortOrder?: 'asc' | 'desc',
+    id?: number
   ): Promise<PaginatedResponse<Song>> {
     const params = new URLSearchParams()
     params.append('page', String(page))
@@ -285,16 +286,16 @@ class ApiService {
       params.append('search', search)
     }
 
-    if (styleId) {
+    if (styleId !== undefined && styleId !== null) {
       params.append('style_id', String(styleId))
     }
 
     if (categoryIds && categoryIds.length > 0) {
-      categoryIds.forEach(id => params.append('category_ids[]', String(id)))
+      categoryIds.forEach(categoryId => params.append('category_ids[]', String(categoryId)))
     }
 
     if (songLanguageIds && songLanguageIds.length > 0) {
-      songLanguageIds.forEach(id => params.append('song_language_ids[]', String(id)))
+      songLanguageIds.forEach(langId => params.append('song_language_ids[]', String(langId)))
     }
 
     if (sortBy) {
@@ -303,6 +304,10 @@ class ApiService {
 
     if (sortOrder) {
       params.append('sort_order', sortOrder)
+    }
+
+    if (id !== undefined && id !== null) {
+      params.append('id', String(id))
     }
 
     return this.request<PaginatedResponse<Song>>(`/songs?${params.toString()}`)
@@ -434,12 +439,12 @@ class ApiService {
   isAuthenticated(): boolean {
     return !!this.token;
   }
-  
+
   isAdmin(): boolean {
     try {
       const adminDetails = localStorage.getItem('admin_details');
       if (!adminDetails) return false;
-      
+
       const admin = JSON.parse(adminDetails);
       return Array.isArray(admin.roles) && admin.roles.some((role: Role) => role.id === 1);
     } catch (e) {

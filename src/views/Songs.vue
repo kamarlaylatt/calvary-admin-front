@@ -54,6 +54,20 @@
         <div v-show="showFilters">
           <v-card-text class="pt-0">
             <v-row>
+              <!-- ID Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-text-field
+                  v-model="idFilter"
+                  label="ID"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  min="1"
+                ></v-text-field>
+              </v-col>
+
               <!-- Style Filter -->
               <v-col cols="12" sm="6" md="3">
                 <v-select
@@ -311,6 +325,7 @@ const page = ref(1)
 const totalPages = ref(1)
 
 // Filter state variables
+const idFilter = ref<string>('')
 const selectedStyleId = ref<number | null>(null)
 const selectedCategoryIds = ref<number[]>([])
 const selectedLanguageIds = ref<number[]>([])
@@ -351,7 +366,7 @@ onMounted(() => {
 })
 
 // Watch for filter changes
-watch([selectedStyleId, selectedCategoryIds, selectedLanguageIds, sortBy, sortOrder], () => {
+watch([selectedStyleId, selectedCategoryIds, selectedLanguageIds, sortBy, sortOrder, idFilter], () => {
   page.value = 1
   fetchSongs()
 }, { deep: true })
@@ -361,6 +376,9 @@ async function fetchSongs() {
   error.value = ''
   
   try {
+    const parsedId = Number(idFilter.value)
+    const idParam = !isNaN(parsedId) && parsedId > 0 ? parsedId : undefined
+
     const response = await apiService.getSongs(
       page.value,
       search.value || undefined,
@@ -368,7 +386,8 @@ async function fetchSongs() {
       selectedCategoryIds.value.length > 0 ? selectedCategoryIds.value : undefined,
       selectedLanguageIds.value.length > 0 ? selectedLanguageIds.value : undefined,
       sortBy.value,
-      sortOrder.value
+      sortOrder.value,
+      idParam
     )
     songs.value = response.data
     totalPages.value = response.last_page
@@ -411,6 +430,7 @@ function clearFilters() {
   sortBy.value = 'id'
   sortOrder.value = 'desc'
   search.value = ''
+  idFilter.value = ''
 }
 
 function editSong(song: Song) {
