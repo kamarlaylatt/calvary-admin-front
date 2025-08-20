@@ -359,7 +359,7 @@ const songLanguages = ref<SongLanguage[]>([])
 const songsWithStyles = computed<SongWithStyleName[]>(() => {
   return songs.value.map(song => ({
     ...song,
-    styleName: styles.value.find(style => style.id === song.style_id)?.name || 'Unknown'
+    styleName: styles.value.find(style => style.id === song.style_id)?.name || '-'
   }))
 })
 
