@@ -240,7 +240,7 @@ async function loadSong() {
       style_id: existingSong.style_id ?? undefined,
       popular_rating: existingSong.popular_rating ?? undefined,
       category_ids: existingSong.categories?.map(c => c.id) || [],
-      song_language_ids: []
+      song_language_ids: existingSong.song_languages?.map(l => l.id) || []
     })
   } catch (err) {
     error.value = 'Failed to load song. Please try again.'

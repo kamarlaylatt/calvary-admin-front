@@ -175,6 +175,7 @@
               <th>Title</th>
               <th>Style</th>
               <th class="d-none d-lg-table-cell">Categories</th>
+              <th class="d-none d-lg-table-cell">Languages</th>
               <th class="d-none d-sm-table-cell">Rating</th>
               <th class="d-none d-sm-table-cell">YouTube</th>
               <th>Actions</th>
@@ -182,13 +183,14 @@
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4">
+              <td :colspan="$vuetify.display.lgAndUp ? 8 : $vuetify.display.mdAndUp ? 7 : $vuetify.display.smAndUp ? 6 : 5">
                 <div class="d-flex flex-column ga-4 pa-4">
                   <template v-for="_i in 5" :key="_i">
                     <div class="d-flex ga-4">
                       <v-skeleton-loader type="text" width="20%"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="15%" class="d-none d-lg-flex"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="10%" class="d-none d-lg-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="10%" class="d-none d-sm-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="text" width="10%" class="d-none d-sm-flex"></v-skeleton-loader>
                       <v-skeleton-loader type="button" width="15%"></v-skeleton-loader>
@@ -198,7 +200,7 @@
               </td>
             </tr>
             <tr v-else-if="songsWithStyles.length === 0">
-              <td :colspan="$vuetify.display.lgAndUp ? 7 : $vuetify.display.mdAndUp ? 6 : $vuetify.display.smAndUp ? 5 : 4" class="text-center py-8 text-medium-emphasis">
+              <td :colspan="$vuetify.display.lgAndUp ? 8 : $vuetify.display.mdAndUp ? 7 : $vuetify.display.smAndUp ? 6 : 5" class="text-center py-8 text-medium-emphasis">
                 {{ search ? 'No songs found matching your search.' : 'No songs available.' }}
               </td>
             </tr>
@@ -221,6 +223,21 @@
                     variant="tonal"
                   >
                     {{ category.name }}
+                  </v-chip>
+                </div>
+                <span v-else class="text-medium-emphasis">-</span>
+              </td>
+              <td class="d-none d-lg-table-cell">
+                <div v-if="song.song_languages && song.song_languages.length > 0" class="d-flex flex-wrap ga-1">
+                  <v-chip
+                    v-for="language in song.song_languages"
+                    :key="language.id"
+                    size="small"
+                    color="secondary"
+                    variant="tonal"
+                    class="language-chip"
+                  >
+                    {{ language.name }}
                   </v-chip>
                 </div>
                 <span v-else class="text-medium-emphasis">-</span>
@@ -313,6 +330,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import apiService, { type Song, type Style, type Category, type SongLanguage } from '@/services/api'
+type SongWithStyleName = Song & { styleName: string; song_languages?: SongLanguage[] }
 
 const router = useRouter()
 const search = ref('')
@@ -338,7 +356,7 @@ const styles = ref<Style[]>([])
 const categories = ref<Category[]>([])
 const songLanguages = ref<SongLanguage[]>([])
 
-const songsWithStyles = computed(() => {
+const songsWithStyles = computed<SongWithStyleName[]>(() => {
   return songs.value.map(song => ({
     ...song,
     styleName: styles.value.find(style => style.id === song.style_id)?.name || 'Unknown'
@@ -460,3 +478,10 @@ async function confirmDelete() {
   }
 }
 </script>
+
+<style scoped>
+/* Force white text on Languages chips in dark mode within this component */
+:deep(.v-theme--dark .language-chip .v-chip__content) {
+  color: #ffffff !important;
+}
+</style>
