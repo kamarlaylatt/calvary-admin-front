@@ -239,8 +239,8 @@ async function loadSong() {
       ...existingSong,
       style_id: existingSong.style_id ?? undefined,
       popular_rating: existingSong.popular_rating ?? undefined,
-      category_ids: existingSong.categories?.map(c => c.id) || [],
-      song_language_ids: existingSong.song_languages?.map(l => l.id) || []
+      category_ids: existingSong.categories?.map((c: Category) => c.id) || [],
+      song_language_ids: existingSong.song_languages?.map((l: SongLanguage) => l.id) || []
     })
   } catch (err) {
     error.value = 'Failed to load song. Please try again.'

@@ -91,6 +91,7 @@ interface Song {
   updated_at: string;
   style?: Style;
   categories?: Category[];
+  song_languages?: SongLanguage[];
 }
 
 interface CreateSongRequest {
@@ -116,6 +117,7 @@ interface UpdateSongRequest {
   music_notes?: string;
   popular_rating?: number;
   category_ids?: number[];
+  song_language_ids?: number[];
 }
 
 interface PaginatedResponse<T> {
