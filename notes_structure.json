@@ -1,0 +1,65 @@
+{
+    "version": 0.1,
+    "data": {
+        "key": "C",
+        "arrangement": [
+            1,
+            2,
+            3
+        ],
+        "sections": [
+            {
+                "id": 1,
+                "name": "verb",
+                "bars": [
+                    {
+                        "timeSignature": [
+                            3,
+                            4
+                        ],
+                        "notes": [
+                            {
+                                "chord": {
+                                    "note": "1"
+                                }
+                            },
+                            {
+                                "chord": {
+                                    "note": "-"
+                                }
+                            },
+                            {
+                                "chord": {
+                                    "note": "-"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "timeSignature": [
+                            3,
+                            4
+                        ],
+                        "notes": [
+                            {
+                                "chord": {
+                                    "note": "1"
+                                }
+                            },
+                            {
+                                "chord": {
+                                    "note": "-"
+                                }
+                            },
+                            {
+                                "chord": {
+                                    "name": "-"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
