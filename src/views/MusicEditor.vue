@@ -12,14 +12,699 @@
 
     <v-card elevation="2">
       <v-card-text>
-        <p>Music editor content will go here.</p>
+        <v-row>
+          <v-col cols="12" md="8">
+            <!-- Key and scale mapping -->
+            <v-row class="mb-4">
+              <v-col cols="12" md="4">
+                <v-select label="Key" :items="KEYS" v-model="structure.data.key" density="comfortable"></v-select>
+              </v-col>
+              <v-col cols="12" md="8">
+                <div>Scale mapping:</div>
+                <div class="d-flex flex-wrap">
+                  <v-chip v-for="deg in [1,2,3,4,5,6,7]" :key="deg" class="ma-1" color="primary" variant="tonal">
+                    {{ deg }} = {{ degreeToNoteName(structure.data.key, deg) }}
+                  </v-chip>
+                </div>
+              </v-col>
+            </v-row>
+
+            <!-- Section selection toolbar -->
+            <v-card class="mb-4" variant="tonal">
+              <v-card-text>
+                <v-row class="align-center">
+                  <v-col cols="12" md="6">
+                    <v-select
+                      v-model="selectedSectionId"
+                      :items="sectionSelectItems"
+                      item-title="title"
+                      item-value="value"
+                      label="Select Section"
+                      density="comfortable"
+                      clearable
+                    />
+                  </v-col>
+                  <v-col cols="12" md="6" class="d-flex justify-end">
+                    <v-btn color="primary" prepend-icon="mdi-plus" variant="tonal" class="mr-2" @click="addSection">
+                      Add Section
+                    </v-btn>
+                    <v-btn color="error" prepend-icon="mdi-delete" variant="text" :disabled="!selectedSection" @click="removeSelectedSection">
+                      Remove Selected
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+
+            <!-- Selected section editor -->
+            <div v-if="!selectedSection" class="text-medium-emphasis">No section selected. Create or select a section to edit its bars.</div>
+            <div v-else>
+              <v-card class="mb-2">
+                <v-card-title class="d-flex align-center">
+                  <v-text-field
+                    v-model="selectedSection.name"
+                    label="Section name"
+                    variant="underlined"
+                    density="compact"
+                    class="mr-4"
+                  />
+                  <v-spacer />
+                  <v-btn color="primary" variant="tonal" size="small" @click="addBarForSelected">Add Bar</v-btn>
+                </v-card-title>
+                <v-divider />
+                <v-card-text>
+                  <div v-if="selectedSection.bars.length === 0" class="text-medium-emphasis">
+                    No bars in this section.
+                  </div>
+
+                  <div v-else class="paper-line d-flex align-center flex-wrap">
+                    <span class="barline">||</span>
+                    <template v-for="(bar, bIdx) in selectedSection.bars" :key="bIdx">
+                      <span
+                        class="ts"
+                        v-if="bIdx === 0 || !sameTimeSig(selectedSection.bars[bIdx - 1], bar)"
+                        @click="openTsDialog(bar)"
+                        title="Click to edit time signature"
+                      >
+                        ({{ bar.timeSignature[0] }}/{{ bar.timeSignature[1] }})
+                      </span>
+                      <span class="bar-content d-flex align-center flex-wrap">
+                        <v-chip
+                          v-for="(note, nIdx) in bar.notes"
+                          :key="nIdx"
+                          size="small"
+                          variant="tonal"
+                          class="ma-1"
+                          @click="openNoteEditor(selectedSection, bar, note)"
+                          title="Click to edit chord"
+                        >
+                          {{ renderChord(note.chord) }}
+                        </v-chip>
+                      </span>
+                      <v-btn
+                        icon
+                        size="x-small"
+                        variant="text"
+                        class="ml-1"
+                        :title="'Edit time signature of bar ' + (bIdx + 1)"
+                        @click="openTsDialog(bar)"
+                      >
+                        <v-icon size="16">mdi-timer-outline</v-icon>
+                      </v-btn>
+                      <v-btn
+                        icon
+                        size="x-small"
+                        variant="text"
+                        color="error"
+                        class="ml-1"
+                        :title="'Remove bar ' + (bIdx + 1)"
+                        @click="removeBar(selectedSection, bIdx)"
+                      >
+                        <v-icon size="16">mdi-close</v-icon>
+                      </v-btn>
+                      <span class="bar-sep">|</span>
+                    </template>
+                    <span class="barline">|</span><span class="barline">|</span>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </div>
+
+            <!-- Arrangement editor: allow duplicates and ordering -->
+            <v-card class="mt-6">
+              <v-card-title class="text-subtitle-1">Arrangement (sequence of section IDs, duplicates allowed)</v-card-title>
+              <v-divider />
+              <v-card-text>
+                <div class="d-flex align-center mb-3">
+                  <v-btn
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    prepend-icon="mdi-plus"
+                    class="mr-2"
+                    :disabled="!selectedSectionId"
+                    @click="appendSelectedToArrangement"
+                  >
+                    Append Selected
+                  </v-btn>
+                  <v-btn size="small" variant="tonal" prepend-icon="mdi-playlist-plus" class="mr-2" @click="addArrangementStep">
+                    Add Step
+                  </v-btn>
+                  <v-btn size="small" variant="text" color="error" prepend-icon="mdi-delete-sweep" @click="clearArrangement">
+                    Clear
+                  </v-btn>
+                </div>
+
+                <div v-if="structure.data.arrangement.length === 0" class="text-medium-emphasis">Arrangement is empty.</div>
+
+                <div v-for="(secId, idx) in structure.data.arrangement" :key="idx" class="d-flex align-center mb-2">
+                  <div class="text-caption" style="width: 24px">{{ idx + 1 }}</div>
+                  <v-select
+                    v-model="structure.data.arrangement[idx]"
+                    :items="sectionSelectItems"
+                    item-title="title"
+                    item-value="value"
+                    label="Section"
+                    density="compact"
+                    style="max-width: 280px"
+                    class="mr-2"
+                    clearable
+                  />
+                  <v-btn icon size="small" variant="text" class="mr-1" :disabled="idx === 0" @click="moveArrangement(idx, -1)">
+                    <v-icon>mdi-arrow-up</v-icon>
+                  </v-btn>
+                  <v-btn icon size="small" variant="text" class="mr-1" :disabled="idx === structure.data.arrangement.length - 1" @click="moveArrangement(idx, +1)">
+                    <v-icon>mdi-arrow-down</v-icon>
+                  </v-btn>
+                  <v-btn icon size="small" color="error" variant="text" @click="removeArrangement(idx)">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </v-card-text>
+            </v-card>
+
+            <v-card class="mt-6">
+              <v-card-title class="text-subtitle-1">Arrangement Preview</v-card-title>
+              <v-divider />
+              <v-card-text>
+                <div v-if="arrangementLines.length === 0" class="text-medium-emphasis">
+                  No bars to preview. Ensure arrangement includes sections with bars.
+                </div>
+                <div v-else>
+                  <div v-for="(line, idx) in arrangementLines" :key="idx" class="mb-3">
+                    <div class="text-caption text-medium-emphasis mb-1">{{ line.title }}</div>
+                    <div class="paper-line d-flex align-center flex-wrap">
+                      <span class="barline">||</span>
+                      <template v-for="(entry, bIdx) in line.bars" :key="bIdx">
+                        <span v-if="entry.showTs" class="ts">({{ entry.bar.timeSignature[0] }}/{{ entry.bar.timeSignature[1] }})</span>
+                        <span class="bar-content d-flex align-center flex-wrap">
+                          <v-chip
+                            v-for="(note, nIdx) in entry.bar.notes"
+                            :key="nIdx"
+                            size="small"
+                            variant="tonal"
+                            class="ma-1"
+                          >
+                            {{ renderChord(note.chord) }}
+                          </v-chip>
+                        </span>
+                        <span class="bar-sep">|</span>
+                      </template>
+                      <span class="barline">|</span><span class="barline">|</span>
+                    </div>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+
+          </v-col>
+
+          <v-col cols="12" md="4">
+            <v-card elevation="1" class="mb-4">
+              <v-card-title class="text-subtitle-1">JSON Preview</v-card-title>
+              <v-divider />
+              <v-card-text>
+                <pre class="text-body-2" style="max-height: 420px; overflow: auto">{{ jsonPreview }}</pre>
+              </v-card-text>
+            </v-card>
+
+            <v-card elevation="1">
+              <v-card-title class="text-subtitle-1">Nashville Numbers</v-card-title>
+              <v-divider />
+              <v-card-text>
+                <div class="d-flex flex-wrap">
+                  <v-chip v-for="deg in [1,2,3,4,5,6,7]" :key="deg" class="ma-1" variant="tonal">
+                    {{ deg }} → {{ degreeToNoteName(structure.data.key, deg) }}
+                  </v-chip>
+                </div>
+                <div class="mt-2 text-caption text-medium-emphasis">
+                  Display updates when key changes. Example: Key E → 1 is E, 2 is F#.
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
+
+    <!-- Note editor -->
+    <v-dialog v-model="noteDialog.visible" max-width="480">
+      <v-card>
+        <v-card-title>Edit Chord</v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col cols="6">
+              <v-select
+                label="Degree"
+                :items="degreeDisplayItems"
+                item-title="title"
+                item-value="value"
+                v-model="noteDialog.form.note"
+                density="comfortable"
+              ></v-select>
+            </v-col>
+            <v-col cols="6">
+              <v-select label="Quality" :items="QUALITY_ITEMS" v-model="noteDialog.form.quality" density="comfortable" clearable></v-select>
+            </v-col>
+          </v-row>
+          <div class="mt-2">
+            <div class="text-caption text-medium-emphasis">Chord preview</div>
+            <div class="text-subtitle-2">{{ renderChord(noteDialog.form) }}</div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="deleteNote">Delete</v-btn>
+          <v-btn color="primary" @click="saveNote">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="tsDialog.visible" max-width="360">
+      <v-card>
+        <v-card-title>Time Signature</v-card-title>
+        <v-card-text>
+          <div class="d-flex align-center">
+            <v-select
+              :items="BEATS"
+              v-model="tsDialog.beats"
+              label="Beats"
+              density="compact"
+              style="max-width: 120px"
+              class="mr-2"
+            />
+            <span class="mx-1">/</span>
+            <v-select
+              :items="DIVISIONS"
+              v-model="tsDialog.unit"
+              label="Unit"
+              density="compact"
+              style="max-width: 120px"
+            />
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="tsDialog.visible = false">Cancel</v-btn>
+          <v-btn color="primary" @click="saveTs">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+
+type Quality =
+  | 'maj' | 'min' | 'dim' | 'aug'
+  | 'dom7' | 'maj7' | 'min7'
+  | 'sus2' | 'sus4' | 'add9'
+
+type Degree = '-' | '1' | '2' | '3' | '4' | '5' | '6' | '7'
+
+interface Chord {
+  note: Degree
+  quality?: Quality
+}
+
+interface NoteWrap {
+  chord: Chord | Record<string, any>
+}
+
+interface Bar {
+  timeSignature: [number, number]
+  notes: NoteWrap[]
+}
+
+interface Section {
+  id: number
+  name: string
+  bars: Bar[]
+}
+
+interface Structure {
+  version: number
+  data: {
+    key: string
+    arrangement: number[]
+    sections: Section[]
+  }
+}
+
+const fallback: Structure = {
+  version: 0.1,
+  data: {
+    key: 'C',
+    arrangement: [],
+    sections: []
+  }
+}
+
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj))
+}
+
+const structure = reactive<Structure>(deepClone(fallback))
+normalizeAllBars()
+
+// Constants
+const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+const SEMITONES = KEYS // 12-TET, prefer sharps
+const MAJOR_SCALE = [0,2,4,5,7,9,11]
+const DEGREE_ITEMS: Degree[] = ['-','1','2','3','4','5','6','7']
+const QUALITY_ITEMS: Quality[] = ['maj','min','dim','aug','dom7','maj7','min7','sus2','sus4','add9']
+const BEATS = [2,3,4,6,7,9,12]
+const DIVISIONS = [2,4,8,16]
+
+const degreeDisplayItems = computed(() => {
+  const items: { title: string; value: Degree }[] = [{ title: '-', value: '-' }]
+  for (let i = 1; i <= 7; i++) {
+    items.push({ title: degreeToNoteName(structure.data.key, i), value: String(i) as Degree })
+  }
+  return items
+})
+
+// Helpers
+function getChordDegree(chord: Partial<Chord> & Record<string, any>): Degree {
+  const n = chord?.note as Degree | undefined
+  if (n && (DEGREE_ITEMS as string[]).includes(n)) return n as Degree
+  const name = chord?.name
+  if (name === '-') return '-'
+  return '-'
+}
+
+function degreeToNoteName(key: string, degree: Degree | number | undefined | null): string {
+  if (degree == null) return '-'
+  if (degree === '-') return '-'
+  const tonic = SEMITONES.indexOf(key)
+  const num = typeof degree === 'number' ? degree : parseInt(degree, 10)
+  if (!Number.isFinite(num) || num < 1 || num > 7 || tonic < 0) return String(degree)
+  const semitoneOffset = MAJOR_SCALE[(num - 1) % 7]
+  const idx = (tonic + semitoneOffset) % 12
+  return SEMITONES[idx]
+}
+
+function renderChord(chord: Chord | Record<string, any>): string {
+  const degree = getChordDegree(chord as any)
+  const root = degreeToNoteName(structure.data.key, degree)
+  if (root === '-') return '-'
+  const qualMap: Record<string, string> = {
+    maj: '',
+    min: 'm',
+    dim: 'dim',
+    aug: 'aug',
+    dom7: '7',
+    maj7: 'maj7',
+    min7: 'm7',
+    sus2: 'sus2',
+    sus4: 'sus4',
+    add9: 'add9'
+  }
+  const q = (chord as any).quality as Quality | undefined
+  const suffix = q ? (qualMap[q] ?? q) : ''
+  return suffix ? `${root}${suffix}` : root
+}
+
+function sameTimeSig(a: Bar, b: Bar): boolean {
+  return a.timeSignature[0] === b.timeSignature[0] && a.timeSignature[1] === b.timeSignature[1]
+}
+
+function ensureBarNotesLength(bar: Bar): void {
+  const beats = bar.timeSignature[0]
+  if (!Array.isArray(bar.notes)) bar.notes = []
+  if (bar.notes.length > beats) {
+    bar.notes = bar.notes.slice(0, beats)
+  } else if (bar.notes.length < beats) {
+    for (let i = bar.notes.length; i < beats; i++) {
+      bar.notes.push({ chord: { note: '-' } })
+    }
+  }
+}
+
+
+function normalizeAllBars(): void {
+  for (const sec of structure.data.sections) {
+    for (const bar of sec.bars) {
+      ensureBarNotesLength(bar)
+    }
+  }
+}
+
+function sameTimeSigTs(prev: [number, number] | null, curr: [number, number]): boolean {
+  if (!prev) return true
+  return prev[0] === curr[0] && prev[1] === curr[1]
+}
+
+const arrangementLines = computed(() => {
+  const lines: { title: string; bars: { bar: Bar; showTs: boolean }[] }[] = []
+  structure.data.arrangement.forEach((secId) => {
+    const sec = structure.data.sections.find(s => s.id === secId)
+    if (!sec) return
+    let prev: [number, number] | null = null
+    const bars = sec.bars.map((bar) => {
+      ensureBarNotesLength(bar)
+      const showTs = prev === null || !sameTimeSigTs(prev, bar.timeSignature)
+      prev = bar.timeSignature
+      return { bar, showTs }
+    })
+    lines.push({ title: `${sec.name} (#${sec.id})`, bars })
+  })
+  return lines
+})
+
+const arrangementFlatBars = computed(() => {
+  const seq: { bar: Bar; showTs: boolean }[] = []
+  let prev: [number, number] | null = null
+  for (const secId of structure.data.arrangement) {
+    const sec = structure.data.sections.find(s => s.id === secId)
+    if (!sec) continue
+    for (const bar of sec.bars) {
+      ensureBarNotesLength(bar)
+      // Show TS only for first bar or when it changes from previous
+      const showTs = prev === null || !sameTimeSigTs(prev, bar.timeSignature)
+      seq.push({ bar, showTs })
+      prev = bar.timeSignature
+    }
+  }
+  return seq
+})
+ 
+// Section selection and helpers
+const selectedSectionId = ref<number | null>(null)
+const sectionSelectItems = computed(() =>
+  structure.data.sections.map(s => ({ title: `${s.name} (#${s.id})`, value: s.id }))
+)
+const selectedSection = computed<Section | undefined>(() =>
+  structure.data.sections.find(s => s.id === selectedSectionId.value!)
+)
+
+watch(
+  () => structure.data.sections.length,
+  (len) => {
+    if (len > 0 && (selectedSectionId.value == null || !structure.data.sections.some(s => s.id === selectedSectionId.value))) {
+      selectedSectionId.value = structure.data.sections[0].id
+    }
+    if (len === 0) selectedSectionId.value = null
+  },
+  { immediate: true }
+)
+
+function nextSectionId(): number {
+  const ids = structure.data.sections.map(s => s.id)
+  return ids.length ? Math.max(...ids) + 1 : 1
+}
+
+function addSection(): void {
+  const newId = nextSectionId()
+  structure.data.sections.push({
+    id: newId,
+    name: `Section ${structure.data.sections.length + 1}`,
+    bars: []
+  })
+  selectedSectionId.value = newId
+}
+
+function removeSelectedSection(): void {
+  if (selectedSectionId.value == null) return
+  const idx = structure.data.sections.findIndex(s => s.id === selectedSectionId.value)
+  if (idx >= 0) {
+    const removed = structure.data.sections[idx]
+    structure.data.sections.splice(idx, 1)
+    // prune arrangement references to this section id
+    structure.data.arrangement = structure.data.arrangement.filter(id => id !== removed.id)
+  }
+  // select next available
+  selectedSectionId.value = structure.data.sections[0]?.id ?? null
+}
+
+function addBar(section: Section): void {
+  // Default time signature follows previous bar, otherwise 4/4
+  const last = section.bars[section.bars.length - 1]
+  const beats = last ? last.timeSignature[0] : 4
+  const unit = last ? last.timeSignature[1] : 4
+  const bar: Bar = {
+    timeSignature: [beats, unit],
+    notes: []
+  }
+  ensureBarNotesLength(bar)
+  section.bars.push(bar)
+}
+
+function addBarForSelected(): void {
+  if (!selectedSection.value) return
+  addBar(selectedSection.value)
+}
+
+function removeBar(section: Section, barIndex: number): void {
+  section.bars.splice(barIndex, 1)
+}
+
+function addNote(bar: Bar): void {
+  bar.notes.push({
+    chord: { note: '-' }
+  })
+}
+
+// Arrangement controls (allow duplicates)
+function appendSelectedToArrangement(): void {
+  if (selectedSectionId.value == null) return
+  structure.data.arrangement.push(selectedSectionId.value)
+}
+
+function addArrangementStep(): void {
+  // Add a step with the current selected or first available section id (or 0 if none)
+  const fallbackId = structure.data.sections[0]?.id ?? 0
+  structure.data.arrangement.push(selectedSectionId.value ?? fallbackId)
+}
+
+function removeArrangement(index: number): void {
+  structure.data.arrangement.splice(index, 1)
+}
+
+function moveArrangement(index: number, delta: number): void {
+  const newIndex = index + delta
+  if (newIndex < 0 || newIndex >= structure.data.arrangement.length) return
+  const arr = structure.data.arrangement
+  const [item] = arr.splice(index, 1)
+  arr.splice(newIndex, 0, item)
+}
+
+function clearArrangement(): void {
+  structure.data.arrangement = []
+}
+
+// Note editor dialog state
+const noteDialog = reactive<{
+  visible: boolean
+  section?: Section
+  bar?: Bar
+  noteRef?: NoteWrap
+  form: Chord
+}>({
+  visible: false,
+  form: { note: '-' }
+})
+
+function openNoteEditor(section: Section, bar: Bar, note: NoteWrap): void {
+  noteDialog.section = section
+  noteDialog.bar = bar
+  noteDialog.noteRef = note
+  const deg = getChordDegree(note.chord as any)
+  noteDialog.form = {
+    note: deg,
+    quality: (note.chord as any).quality as Quality | undefined
+  }
+  noteDialog.visible = true
+}
+
+function saveNote(): void {
+  if (noteDialog.noteRef) {
+    noteDialog.noteRef.chord = noteDialog.noteRef.chord || ({} as any)
+    ;(noteDialog.noteRef.chord as any).note = noteDialog.form.note
+    ;(noteDialog.noteRef.chord as any).quality = noteDialog.form.quality
+    if ('name' in (noteDialog.noteRef.chord as any)) {
+      delete (noteDialog.noteRef.chord as any).name
+    }
+  }
+  noteDialog.visible = false
+}
+
+function deleteNote(): void {
+  const { bar, noteRef } = noteDialog
+  if (bar && noteRef) {
+    // Replace with "-" instead of removing to keep fixed beat slots
+    ;(noteRef as any).chord = { note: '-' }
+    ensureBarNotesLength(bar)
+  }
+  noteDialog.visible = false
+}
+
+const tsDialog = reactive<{
+  visible: boolean
+  bar?: Bar
+  beats: number
+  unit: number
+}>({
+  visible: false,
+  bar: undefined,
+  beats: 4,
+  unit: 4
+})
+
+function openTsDialog(bar: Bar): void {
+  tsDialog.bar = bar
+  tsDialog.beats = bar.timeSignature[0]
+  tsDialog.unit = bar.timeSignature[1]
+  tsDialog.visible = true
+}
+
+function saveTs(): void {
+  if (!tsDialog.bar) {
+    tsDialog.visible = false
+    return
+  }
+  tsDialog.bar.timeSignature = [tsDialog.beats, tsDialog.unit]
+  ensureBarNotesLength(tsDialog.bar)
+  tsDialog.visible = false
+}
+ 
+// JSON preview
+const jsonPreview = computed(() => JSON.stringify(structure, null, 2))
 </script>
+
+<style scoped>
+.border {
+  border: 1px solid rgba(100, 100, 100, 0.25);
+}
+
+.paper-line {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  padding: 8px 10px;
+  border: 1px dashed rgba(100, 100, 100, 0.35);
+  border-radius: 6px;
+}
+
+.paper-line .barline {
+  font-weight: 600;
+  margin: 0 6px;
+}
+
+.paper-line .bar-sep {
+  margin: 0 6px;
+  color: rgba(100, 100, 100, 0.7);
+}
+
+.paper-line .ts {
+  color: rgba(60, 60, 60, 0.9);
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.paper-line .bar-content .v-chip {
+  cursor: pointer;
+}
+</style>
