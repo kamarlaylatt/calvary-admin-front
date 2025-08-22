@@ -280,6 +280,12 @@
                     class="d-sm-none"
                   ></v-btn>
                   <v-btn
+                    icon="mdi-music"
+                    size="small"
+                    variant="text"
+                    @click="editMusic(song)"
+                  ></v-btn>
+                  <v-btn
                     icon="mdi-pencil"
                     size="small"
                     variant="text"
@@ -453,6 +459,10 @@ function clearFilters() {
 
 function editSong(song: Song) {
   router.push(`/songs/${song.id}/edit?page=${page.value}`)
+}
+
+function editMusic(song: Song) {
+  router.push(`/songs/${song.id}/music`)
 }
 
 function deleteSong(song: Song) {

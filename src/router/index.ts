@@ -72,6 +72,13 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/songs/:id/music',
+    name: 'SongMusic',
+    component: () => import('../views/MusicEditor.vue'),
+    props: true,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/styles',
     name: 'Styles',
     component: Styles,
