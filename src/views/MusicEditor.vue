@@ -57,7 +57,14 @@
             </v-card>
 
             <!-- Selected section editor -->
-            <div v-if="!selectedSection" class="text-medium-emphasis">No section selected. Create or select a section to edit its bars.</div>
+            <v-alert v-if="!selectedSection" type="info" variant="tonal" density="comfortable" class="mb-4">
+              <div class="d-flex align-center justify-space-between">
+                <div>No section selected. Create or select a section to edit its bars.</div>
+                <v-btn size="small" color="primary" variant="tonal" prepend-icon="mdi-plus" @click="addSection">
+                  Add Section
+                </v-btn>
+              </div>
+            </v-alert>
             <div v-else>
               <v-card class="mb-2">
                 <v-card-title class="d-flex align-center">
@@ -68,14 +75,22 @@
                     density="compact"
                     class="mr-4"
                   />
+                  <div class="text-caption text-medium-emphasis mr-4">
+                    {{ selectedSection.bars.length }} bar{{ selectedSection.bars.length === 1 ? '' : 's' }}
+                  </div>
                   <v-spacer />
                   <v-btn color="primary" variant="tonal" size="small" @click="addBarForSelected">Add Bar</v-btn>
                 </v-card-title>
                 <v-divider />
                 <v-card-text>
-                  <div v-if="selectedSection.bars.length === 0" class="text-medium-emphasis">
-                    No bars in this section.
-                  </div>
+                  <v-alert v-if="selectedSection.bars.length === 0" type="warning" variant="tonal" density="comfortable" class="mb-3">
+                    <div class="d-flex align-center justify-space-between">
+                      <div>No bars in this section.</div>
+                      <v-btn size="small" color="primary" variant="tonal" prepend-icon="mdi-plus" @click="addBarForSelected">
+                        Add First Bar
+                      </v-btn>
+                    </div>
+                  </v-alert>
 
                   <div v-else class="paper-line d-flex align-center flex-wrap">
                     <span class="barline">||</span>
@@ -132,7 +147,7 @@
 
             <!-- Arrangement editor: allow duplicates and ordering -->
             <v-card class="mt-6">
-              <v-card-title class="text-subtitle-1">Arrangement (sequence of section IDs, duplicates allowed)</v-card-title>
+              <v-card-title class="text-subtitle-1">Arrangement</v-card-title>
               <v-divider />
               <v-card-text>
                 <div class="d-flex align-center mb-3">
@@ -155,7 +170,27 @@
                   </v-btn>
                 </div>
 
-                <div v-if="structure.data.arrangement.length === 0" class="text-medium-emphasis">Arrangement is empty.</div>
+                <v-alert v-if="structure.data.arrangement.length === 0" type="info" variant="tonal" density="comfortable" class="mb-2">
+                  <div class="d-flex align-center justify-space-between">
+                    <div>Arrangement is empty.</div>
+                    <div>
+                      <v-btn
+                        size="small"
+                        variant="tonal"
+                        color="primary"
+                        class="mr-2"
+                        :disabled="!selectedSectionId"
+                        @click="appendSelectedToArrangement"
+                        prepend-icon="mdi-plus"
+                      >
+                        Append Selected
+                      </v-btn>
+                      <v-btn size="small" variant="tonal" @click="addArrangementStep" prepend-icon="mdi-playlist-plus">
+                        Add Step
+                      </v-btn>
+                    </div>
+                  </div>
+                </v-alert>
 
                 <div v-for="(secId, idx) in structure.data.arrangement" :key="idx" class="d-flex align-center mb-2">
                   <div class="text-caption" style="width: 24px">{{ idx + 1 }}</div>
@@ -224,6 +259,10 @@
               <v-card-title class="text-subtitle-1">JSON Preview</v-card-title>
               <v-divider />
               <v-card-text>
+                <div class="d-flex justify-space-between align-center mb-2">
+                  <div class="text-caption text-medium-emphasis">Structure JSON</div>
+                  <v-btn size="x-small" variant="text" prepend-icon="mdi-content-copy" @click="copyJson">Copy</v-btn>
+                </div>
                 <pre class="text-body-2" style="max-height: 420px; overflow: auto">{{ jsonPreview }}</pre>
               </v-card-text>
             </v-card>
@@ -315,9 +354,6 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-
-const route = useRoute()
 
 type Quality =
   | 'maj' | 'min' | 'dim' | 'aug'
@@ -476,31 +512,16 @@ const arrangementLines = computed(() => {
   return lines
 })
 
-const arrangementFlatBars = computed(() => {
-  const seq: { bar: Bar; showTs: boolean }[] = []
-  let prev: [number, number] | null = null
-  for (const secId of structure.data.arrangement) {
-    const sec = structure.data.sections.find(s => s.id === secId)
-    if (!sec) continue
-    for (const bar of sec.bars) {
-      ensureBarNotesLength(bar)
-      // Show TS only for first bar or when it changes from previous
-      const showTs = prev === null || !sameTimeSigTs(prev, bar.timeSignature)
-      seq.push({ bar, showTs })
-      prev = bar.timeSignature
-    }
-  }
-  return seq
-})
  
 // Section selection and helpers
 const selectedSectionId = ref<number | null>(null)
 const sectionSelectItems = computed(() =>
   structure.data.sections.map(s => ({ title: `${s.name} (#${s.id})`, value: s.id }))
 )
-const selectedSection = computed<Section | undefined>(() =>
-  structure.data.sections.find(s => s.id === selectedSectionId.value!)
-)
+const selectedSection = computed<Section | undefined>(() => {
+  const id = selectedSectionId.value
+  return id == null ? undefined : structure.data.sections.find(s => s.id === id)
+})
 
 watch(
   () => structure.data.sections.length,
@@ -563,11 +584,6 @@ function removeBar(section: Section, barIndex: number): void {
   section.bars.splice(barIndex, 1)
 }
 
-function addNote(bar: Bar): void {
-  bar.notes.push({
-    chord: { note: '-' }
-  })
-}
 
 // Arrangement controls (allow duplicates)
 function appendSelectedToArrangement(): void {
@@ -674,6 +690,14 @@ function saveTs(): void {
  
 // JSON preview
 const jsonPreview = computed(() => JSON.stringify(structure, null, 2))
+
+async function copyJson(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(jsonPreview.value)
+  } catch (err) {
+    // ignore copy errors silently
+  }
+}
 </script>
 
 <style scoped>
@@ -683,9 +707,10 @@ const jsonPreview = computed(() => JSON.stringify(structure, null, 2))
 
 .paper-line {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  padding: 8px 10px;
-  border: 1px dashed rgba(100, 100, 100, 0.35);
-  border-radius: 6px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(100, 100, 100, 0.28);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .paper-line .barline {
