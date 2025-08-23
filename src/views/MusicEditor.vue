@@ -310,6 +310,23 @@
             <div class="text-caption text-medium-emphasis">Chord preview</div>
             <div class="text-subtitle-2">{{ renderChord(noteDialog.form) }}</div>
           </div>
+
+          <v-divider class="my-3" />
+
+          <v-text-field
+            ref="quickInput"
+            v-model="noteDialog.quick"
+            label="Quick chord (e.g., Am, Cmaj7, Bb7, 6m)"
+            variant="underlined"
+            density="compact"
+            clearable
+            :hint="noteDialog.quickHint"
+            persistent-hint
+            append-inner-icon="mdi-check"
+            @click:append-inner="applyQuick"
+            @update:model-value="onQuickChange"
+            @keyup.enter="applyQuick"
+          />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -353,7 +370,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, nextTick } from 'vue'
 
 type Quality =
   | 'maj' | 'min' | 'dim' | 'aug'
@@ -416,6 +433,94 @@ const QUALITY_ITEMS: Quality[] = ['maj','min','dim','aug','dom7','maj7','min7','
 const BEATS = [2,3,4,6,7,9,12]
 const DIVISIONS = [2,4,8,16]
 
+// Note name helpers for quick entry
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' }
+
+function normalizeNoteName(s: string): string | null {
+  const t = s.trim()
+  const m = t.match(/^([A-Ga-g])([#bB]?)/)
+  if (!m) return null
+  const base = m[1].toUpperCase()
+  const acc = m[2] || ''
+  const raw = base + (acc === 'B' ? 'b' : acc)
+  const sharp = FLAT_TO_SHARP[raw] || raw
+  return NOTE_NAMES.includes(sharp) ? sharp : null
+}
+
+function findDegreeForNoteName(key: string, noteName: string): Degree | null {
+  for (let i = 1; i <= 7; i++) {
+    if (degreeToNoteName(key, i) === noteName) return String(i) as Degree
+  }
+  return null
+}
+
+function canonicalSuffixFromQuality(q?: Quality): string {
+  if (!q || q === 'maj') return ''
+  switch (q) {
+    case 'min': return 'min'
+    case 'dim': return 'dim'
+    case 'aug': return 'aug'
+    case 'dom7': return '7'
+    case 'maj7': return 'maj7'
+    case 'min7': return 'min7'
+    case 'sus2': return 'sus2'
+    case 'sus4': return 'sus4'
+    case 'add9': return 'add9'
+    default: return String(q)
+  }
+}
+
+function qualityFromRawSuffix(raw: string): Quality | undefined {
+  const t = raw.trim()
+  const tl = t.toLowerCase()
+  if (t === '' || tl === 'maj') return undefined
+  if (tl === 'm' || tl === 'min' || tl === 'minor') return 'min'
+  if (tl === 'dim' || tl === 'o' || t === '°') return 'dim'
+  if (tl === 'aug' || t === '+') return 'aug'
+  if (tl === '7' || tl === 'dom7' || tl === 'dom') return 'dom7'
+  if (tl === 'maj7' || t === 'M7' || t === 'Δ7' || tl === 'ma7') return 'maj7'
+  if (tl === 'm7' || tl === 'min7' || tl === 'minor7') return 'min7'
+  if (tl === 'sus2') return 'sus2'
+  if (tl === 'sus4') return 'sus4'
+  if (tl === 'add9') return 'add9'
+  return undefined
+}
+
+function chordToCanonicalText(chord: Chord, key: string): string {
+  const degree = chord.note
+  if (degree === '-') return '-'
+  const root = degreeToNoteName(key, degree)
+  const suffix = canonicalSuffixFromQuality(chord.quality)
+  return root + suffix
+}
+
+function parseQuickChord(input: string, key: string): { chord: Chord; text: string; degree?: Degree } | null {
+  const s = input.trim()
+  if (s === '' || s === '-') {
+    return { chord: { note: '-' }, text: '-' }
+  }
+  // Support Nashville degree input like "6m"
+  const mNum = s.match(/^([1-7])\s*(.*)$/)
+  if (mNum) {
+    const deg = mNum[1] as Degree
+    const qual = qualityFromRawSuffix(mNum[2] || '')
+    const chord: Chord = { note: deg, quality: qual }
+    const root = degreeToNoteName(key, deg)
+    return { chord, text: root + canonicalSuffixFromQuality(qual), degree: deg }
+  }
+  // Absolute chord like "Bb7", "C#m7", "Am"
+  const m = s.match(/^([A-Ga-g])([#bB]?)(.*)$/)
+  if (!m) return null
+  const root = normalizeNoteName((m[1] + (m[2] || '')).toUpperCase())
+  if (!root) return null
+  const qual = qualityFromRawSuffix(m[3] || '')
+  const deg = findDegreeForNoteName(key, root)
+  if (!deg) return null
+  const chord: Chord = { note: deg, quality: qual }
+  return { chord, text: root + canonicalSuffixFromQuality(qual), degree: deg }
+}
+ 
 const degreeDisplayItems = computed(() => {
   const items: { title: string; value: Degree }[] = [{ title: '-', value: '-' }]
   for (let i = 1; i <= 7; i++) {
@@ -620,10 +725,15 @@ const noteDialog = reactive<{
   bar?: Bar
   noteRef?: NoteWrap
   form: Chord
+  quick: string
+  quickHint?: string
 }>({
   visible: false,
-  form: { note: '-' }
+  form: { note: '-' },
+  quick: '',
+  quickHint: ''
 })
+const quickInput = ref<any>(null)
 
 function openNoteEditor(section: Section, bar: Bar, note: NoteWrap): void {
   noteDialog.section = section
@@ -634,7 +744,16 @@ function openNoteEditor(section: Section, bar: Bar, note: NoteWrap): void {
     note: deg,
     quality: (note.chord as any).quality as Quality | undefined
   }
+  noteDialog.quick = chordToCanonicalText(noteDialog.form, structure.data.key)
+  noteDialog.quickHint = noteDialog.form.note === '-' ? 'Parsed: -' : `Parsed: ${noteDialog.quick} → degree ${noteDialog.form.note}`
   noteDialog.visible = true
+  nextTick(() => {
+    const inputEl = quickInput.value?.$el?.querySelector('input') as HTMLInputElement | undefined
+    if (inputEl) {
+      inputEl.focus()
+      inputEl.select()
+    }
+  })
 }
 
 function saveNote(): void {
@@ -657,6 +776,22 @@ function deleteNote(): void {
     ensureBarNotesLength(bar)
   }
   noteDialog.visible = false
+}
+
+function applyQuick(): void {
+  const res = parseQuickChord(noteDialog.quick, structure.data.key)
+  if (!res) {
+    noteDialog.quickHint = 'Unrecognized chord'
+    return
+  }
+  noteDialog.form.note = res.chord.note
+  noteDialog.form.quality = res.chord.quality
+  noteDialog.quick = res.text
+  const deg = res.degree ?? getChordDegree(res.chord as any)
+  noteDialog.quickHint = res.text === '-' ? 'Parsed: -' : `Parsed: ${res.text} → degree ${deg}`
+  if (noteDialog.noteRef) {
+    saveNote()
+  }
 }
 
 const tsDialog = reactive<{
@@ -698,6 +833,33 @@ async function copyJson(): Promise<void> {
     // ignore copy errors silently
   }
 }
+function onQuickChange(val: string): void {
+  noteDialog.quick = val
+  const res = parseQuickChord(val, structure.data.key)
+  if (!res) {
+    noteDialog.quickHint = 'Unrecognized chord'
+    return
+  }
+  // Update form values
+  noteDialog.form.note = res.chord.note
+  noteDialog.form.quality = res.chord.quality
+
+  // Live-apply directly to the current beat (no button/enter required)
+  if (noteDialog.noteRef) {
+    noteDialog.noteRef.chord = noteDialog.noteRef.chord || ({} as any)
+    ;(noteDialog.noteRef.chord as any).note = noteDialog.form.note
+    ;(noteDialog.noteRef.chord as any).quality = noteDialog.form.quality
+    if ('name' in (noteDialog.noteRef.chord as any)) {
+      delete (noteDialog.noteRef.chord as any).name
+    }
+  }
+
+  // Update UI text
+  const deg = res.degree ?? getChordDegree(res.chord as any)
+  noteDialog.quick = res.text
+  noteDialog.quickHint = res.text === '-' ? 'Parsed: -' : `Parsed: ${res.text} → degree ${deg}`
+}
+
 </script>
 
 <style scoped>
