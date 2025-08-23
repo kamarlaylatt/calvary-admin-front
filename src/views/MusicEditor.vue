@@ -451,18 +451,23 @@ const BEATS = [2,3,4,6,7,9,12]
 const DIVISIONS = [2,4,8,16]
 
 // Note name helpers for quick entry
-const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
-const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' }
+const ALL_NOTE_NAMES = ['C','C#','Db','D','D#','Eb','E','F','F#','Gb','G','G#','Ab','A','A#','Bb','B']
+const SHARP_TO_FLAT: Record<string, string> = { 'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb' }
+const FLAT_TO_SHARP: Record<string, string> = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' }
+const KEY_SIGNATURES: Record<string, 'sharp' | 'flat'> = {
+  'C': 'sharp', 'G': 'sharp', 'D': 'sharp', 'A': 'sharp', 'E': 'sharp', 'B': 'sharp', 'F#': 'sharp', 'C#': 'sharp',
+  'F': 'flat', 'Bb': 'flat', 'Eb': 'flat', 'Ab': 'flat', 'Db': 'flat', 'Gb': 'flat', 'Cb': 'flat',
+}
 
 function normalizeNoteName(s: string): string | null {
-  const t = s.trim()
-  const m = t.match(/^([A-Ga-g])([#bB]?)/)
+  const t = s.trim().toUpperCase()
+  if (ALL_NOTE_NAMES.includes(t)) return t
+  const m = t.match(/^([A-G])([#B]?)/)
   if (!m) return null
-  const base = m[1].toUpperCase()
-  const acc = m[2] || ''
+  const base = m[1]
+  const acc = m[2]
   const raw = base + (acc === 'B' ? 'b' : acc)
-  const sharp = FLAT_TO_SHARP[raw] || raw
-  return NOTE_NAMES.includes(sharp) ? sharp : null
+  return ALL_NOTE_NAMES.includes(raw) ? raw : null
 }
 
 function findDegreeForNoteName(key: string, noteName: string): Degree | null {
@@ -565,8 +570,9 @@ function degreeToNoteName(key: string, degree: Degree | number | undefined | nul
 
   const keyName = normalizeNoteName(key)
   if (!keyName) return 'Invalid key'
-  
-  const tonic = SEMITONES.indexOf(keyName)
+
+  const normalizedKey = FLAT_TO_SHARP[keyName] || keyName
+  const tonic = SEMITONES.indexOf(normalizedKey)
   if (tonic < 0) return String(degree)
 
   const degreeStr = String(degree)
@@ -587,7 +593,14 @@ function degreeToNoteName(key: string, degree: Degree | number | undefined | nul
     finalIndex = (finalIndex - 1 + 12) % 12
   }
 
-  return SEMITONES[finalIndex]
+  const sharpName = SEMITONES[finalIndex]
+
+  // Enharmonic correction based on key signature
+  const keyType = KEY_SIGNATURES[keyName] || KEY_SIGNATURES[normalizedKey] || 'sharp'
+  if (keyType === 'flat') {
+    return SHARP_TO_FLAT[sharpName] || sharpName
+  }
+  return sharpName
 }
 
 function renderChord(chord: Chord | Record<string, any>): string {
