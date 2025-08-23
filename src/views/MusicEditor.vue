@@ -377,7 +377,15 @@ type Quality =
   | 'dom7' | 'maj7' | 'min7'
   | 'sus2' | 'sus4' | 'add9'
 
-type Degree = '-' | '1' | '2' | '3' | '4' | '5' | '6' | '7'
+type Degree =
+  | '-'
+  | '1' | '1#' | '1b'
+  | '2' | '2#' | '2b'
+  | '3' | '3#' | '3b'
+  | '4' | '4#' | '4b'
+  | '5' | '5#' | '5b'
+  | '6' | '6#' | '6b'
+  | '7' | '7#' | '7b'
 
 interface Chord {
   note: Degree
@@ -425,10 +433,19 @@ const structure = reactive<Structure>(deepClone(fallback))
 normalizeAllBars()
 
 // Constants
-const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
-const SEMITONES = KEYS // 12-TET, prefer sharps
-const MAJOR_SCALE = [0,2,4,5,7,9,11]
-const DEGREE_ITEMS: Degree[] = ['-','1','2','3','4','5','6','7']
+const KEYS = ['C','C#','Db','D','D#','Eb','E','F','F#','Gb','G','G#','Ab','A','A#','Bb','B']
+const SEMITONES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+const MAJOR_SCALE_INTERVALS = [0, 2, 4, 5, 7, 9, 11]
+const DEGREE_ITEMS: Degree[] = [
+  '-',
+  '1', '1#', '1b',
+  '2', '2#', '2b',
+  '3', '3#', '3b',
+  '4', '4#', '4b',
+  '5', '5#', '5b',
+  '6', '6#', '6b',
+  '7', '7#', '7b',
+]
 const QUALITY_ITEMS: Quality[] = ['maj','min','dim','aug','dom7','maj7','min7','sus2','sus4','add9']
 const BEATS = [2,3,4,6,7,9,12]
 const DIVISIONS = [2,4,8,16]
@@ -449,8 +466,9 @@ function normalizeNoteName(s: string): string | null {
 }
 
 function findDegreeForNoteName(key: string, noteName: string): Degree | null {
-  for (let i = 1; i <= 7; i++) {
-    if (degreeToNoteName(key, i) === noteName) return String(i) as Degree
+  for (const deg of DEGREE_ITEMS) {
+    if (deg === '-') continue
+    if (degreeToNoteName(key, deg) === noteName) return deg
   }
   return null
 }
@@ -501,10 +519,13 @@ function parseQuickChord(input: string, key: string): { chord: Chord; text: stri
     return { chord: { note: '-' }, text: '-' }
   }
   // Support Nashville degree input like "6m"
-  const mNum = s.match(/^([1-7])\s*(.*)$/)
+  const mNum = s.match(/^([1-7])([#bB]?)\s*(.*)$/)
   if (mNum) {
-    const deg = mNum[1] as Degree
-    const qual = qualityFromRawSuffix(mNum[2] || '')
+    const base = mNum[1]
+    const acc = mNum[2] || ''
+    const deg = (base + acc) as Degree
+    if (!DEGREE_ITEMS.includes(deg)) return null
+    const qual = qualityFromRawSuffix(mNum[3] || '')
     const chord: Chord = { note: deg, quality: qual }
     const root = degreeToNoteName(key, deg)
     return { chord, text: root + canonicalSuffixFromQuality(qual), degree: deg }
@@ -523,8 +544,9 @@ function parseQuickChord(input: string, key: string): { chord: Chord; text: stri
  
 const degreeDisplayItems = computed(() => {
   const items: { title: string; value: Degree }[] = [{ title: '-', value: '-' }]
-  for (let i = 1; i <= 7; i++) {
-    items.push({ title: degreeToNoteName(structure.data.key, i), value: String(i) as Degree })
+  for (const deg of DEGREE_ITEMS) {
+    if (deg === '-') continue
+    items.push({ title: `${deg} = ${degreeToNoteName(structure.data.key, deg)}`, value: deg })
   }
   return items
 })
@@ -539,14 +561,33 @@ function getChordDegree(chord: Partial<Chord> & Record<string, any>): Degree {
 }
 
 function degreeToNoteName(key: string, degree: Degree | number | undefined | null): string {
-  if (degree == null) return '-'
-  if (degree === '-') return '-'
-  const tonic = SEMITONES.indexOf(key)
-  const num = typeof degree === 'number' ? degree : parseInt(degree, 10)
-  if (!Number.isFinite(num) || num < 1 || num > 7 || tonic < 0) return String(degree)
-  const semitoneOffset = MAJOR_SCALE[(num - 1) % 7]
-  const idx = (tonic + semitoneOffset) % 12
-  return SEMITONES[idx]
+  if (degree == null || degree === '-') return '-'
+
+  const keyName = normalizeNoteName(key)
+  if (!keyName) return 'Invalid key'
+  
+  const tonic = SEMITONES.indexOf(keyName)
+  if (tonic < 0) return String(degree)
+
+  const degreeStr = String(degree)
+  const match = degreeStr.match(/^([1-7])([#b]?)/)
+  if (!match) return String(degree)
+
+  const [, baseDegree, accidental] = match
+  const degreeNum = parseInt(baseDegree, 10)
+
+  if (isNaN(degreeNum) || degreeNum < 1 || degreeNum > 7) return String(degree)
+
+  const scaleNoteIndex = (tonic + MAJOR_SCALE_INTERVALS[degreeNum - 1]) % 12
+  
+  let finalIndex = scaleNoteIndex
+  if (accidental === '#') {
+    finalIndex = (finalIndex + 1) % 12
+  } else if (accidental === 'b') {
+    finalIndex = (finalIndex - 1 + 12) % 12
+  }
+
+  return SEMITONES[finalIndex]
 }
 
 function renderChord(chord: Chord | Record<string, any>): string {
