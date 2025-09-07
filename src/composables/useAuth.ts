@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import apiService from '@/services/api';
 import type { Role } from '@/services/api';
+import { RoleId } from '@/types/role.enum';
 
 const isAuthenticated = ref(apiService.isAuthenticated());
 const admin = ref<{ name: string; email: string; roles: Role[] }>({
@@ -58,7 +59,15 @@ export const useAuth = () => {
   };
 
   const isSuperAdmin = computed(() => {
-    return admin.value.roles.some(role => role.id === 1);
+    return admin.value.roles.some(role => role.id === RoleId.SuperAdmin);
+  });
+
+  const isAdmin = computed(() => {
+    return admin.value.roles.some(role => role.id === RoleId.Admin);
+  });
+
+  const isGuest = computed(() => {
+    return admin.value.roles.some(role => role.id === RoleId.Guest);
   });
 
   return {
@@ -69,5 +78,7 @@ export const useAuth = () => {
     checkAuth,
     can,
     isSuperAdmin,
+    isAdmin,
+    isGuest,
   };
 };
