@@ -200,6 +200,8 @@ const styles = ref<Style[]>([])
 const categories = ref<Category[]>([])
 const songLanguages = ref<SongLanguage[]>([])
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
 onMounted(() => {
   fetchData()
   if (isEditing.value) {
@@ -253,6 +255,7 @@ async function loadSong() {
 async function saveSong() {
   if (!song.title.trim()) {
     error.value = 'Song title is required.'
+    scrollToTop()
     return
   }
   
@@ -288,6 +291,7 @@ async function saveSong() {
     router.push({ path: '/songs', query: { page: route.query.page } })
   } catch (err:any) {
     error.value = err.message || 'Failed to save song. Please try again.'
+    scrollToTop()
     console.error('Error saving song:', err)
   } finally {
     saving.value = false

@@ -86,6 +86,8 @@ const language = reactive({
   name: ''
 })
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
 onMounted(() => {
   if (isEditing.value) {
     loadLanguage()
@@ -116,6 +118,7 @@ async function loadLanguage() {
 async function saveLanguage() {
   if (!language.name.trim()) {
     error.value = 'Language name is required.'
+    scrollToTop()
     return
   }
   
@@ -138,6 +141,7 @@ async function saveLanguage() {
     router.push('/song-languages')
   } catch (err:any) {
     error.value = err.message || 'Failed to save song language. Please try again.'
+    scrollToTop()
     console.error('Error saving language:', err)
   } finally {
     saving.value = false

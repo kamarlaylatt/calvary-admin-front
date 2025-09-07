@@ -179,6 +179,8 @@ const admin = reactive({
 
 const roles = ref<Role[]>([])
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
 onMounted(() => {
   fetchRoles()
   if (isEditing.value) {
@@ -224,22 +226,26 @@ async function loadAdmin() {
 async function saveAdmin() {
   if (!admin.name.trim()) {
     error.value = 'Name is required.'
+    scrollToTop()
     return
   }
   
   if (!admin.email.trim()) {
     error.value = 'Email is required.'
+    scrollToTop()
     return
   }
   
   if (!isEditing.value) {
     if (!admin.password) {
       error.value = 'Password is required.'
+      scrollToTop()
       return
     }
     
     if (admin.password !== admin.password_confirmation) {
       error.value = 'Passwords must match.'
+      scrollToTop()
       return
     }
   }
@@ -290,6 +296,7 @@ async function saveAdmin() {
     } else {
       error.value = err.message || 'Failed to save admin. Please try again.'
     }
+    scrollToTop()
     console.error('Error saving admin:', err)
   } finally {
     saving.value = false

@@ -86,6 +86,8 @@ const style = reactive({
   name: ''
 })
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
 onMounted(() => {
   if (isEditing.value) {
     loadStyle()
@@ -116,6 +118,7 @@ async function loadStyle() {
 async function saveStyle() {
   if (!style.name.trim()) {
     error.value = 'Style name is required.'
+    scrollToTop()
     return
   }
   
@@ -138,6 +141,7 @@ async function saveStyle() {
     router.push('/styles')
   } catch (err:any) {
     error.value = err.message || 'Failed to save style. Please try again.'
+    scrollToTop()
     console.error('Error saving style:', err)
   } finally {
     saving.value = false

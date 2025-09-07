@@ -98,6 +98,8 @@ const category = reactive({
   description: ''
 })
 
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
 onMounted(() => {
   if (isEditing.value) {
     loadCategory()
@@ -128,6 +130,7 @@ async function loadCategory() {
 async function saveCategory() {
   if (!category.name.trim()) {
     error.value = 'Category name is required.'
+    scrollToTop()
     return
   }
   
@@ -152,6 +155,7 @@ async function saveCategory() {
     router.push({ path: '/categories', query: { page: route.query.page } })
   } catch (err:any) {
     error.value = err.message || 'Failed to save category. Please try again.'
+    scrollToTop()
     console.error('Error saving category:', err)
   } finally {
     saving.value = false
