@@ -286,8 +286,8 @@ async function saveSong() {
     }
     
     router.push({ path: '/songs', query: { page: route.query.page } })
-  } catch (err) {
-    error.value = 'Failed to save song. Please try again.'
+  } catch (err:any) {
+    error.value = err.message || 'Failed to save song. Please try again.'
     console.error('Error saving song:', err)
   } finally {
     saving.value = false

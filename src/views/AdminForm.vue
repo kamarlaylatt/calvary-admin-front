@@ -285,10 +285,10 @@ async function saveAdmin() {
     router.push({ path: '/admins', query: { page: route.query.page } })
   } catch (err: any) {
     // Handle validation errors from Laravel
-    if (err.message && err.message.includes('HTTP error! status: 422')) {
+    if (err.response && err.response.status === 422) {
       error.value = 'Validation failed. Please check your input.'
     } else {
-      error.value = 'Failed to save admin. Please try again.'
+      error.value = err.message || 'Failed to save admin. Please try again.'
     }
     console.error('Error saving admin:', err)
   } finally {

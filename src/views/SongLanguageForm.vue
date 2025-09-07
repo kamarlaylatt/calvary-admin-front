@@ -136,8 +136,8 @@ async function saveLanguage() {
     }
     
     router.push('/song-languages')
-  } catch (err) {
-    error.value = 'Failed to save language. Please try again.'
+  } catch (err:any) {
+    error.value = err.message || 'Failed to save song language. Please try again.'
     console.error('Error saving language:', err)
   } finally {
     saving.value = false

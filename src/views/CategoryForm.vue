@@ -150,8 +150,8 @@ async function saveCategory() {
     }
     
     router.push({ path: '/categories', query: { page: route.query.page } })
-  } catch (err) {
-    error.value = 'Failed to save category. Please try again.'
+  } catch (err:any) {
+    error.value = err.message || 'Failed to save category. Please try again.'
     console.error('Error saving category:', err)
   } finally {
     saving.value = false

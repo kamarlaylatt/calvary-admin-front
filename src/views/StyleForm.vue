@@ -136,8 +136,8 @@ async function saveStyle() {
     }
     
     router.push('/styles')
-  } catch (err) {
-    error.value = 'Failed to save style. Please try again.'
+  } catch (err:any) {
+    error.value = err.message || 'Failed to save style. Please try again.'
     console.error('Error saving style:', err)
   } finally {
     saving.value = false
