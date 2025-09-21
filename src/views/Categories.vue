@@ -52,12 +52,13 @@
               <th>Name</th>
               <th class="d-none d-md-table-cell">Slug</th>
               <th class="d-none d-lg-table-cell">Description</th>
+              <th>Sort No</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.lgAndUp ? 4 : $vuetify.display.mdAndUp ? 3 : 2">
+              <td :colspan="$vuetify.display.lgAndUp ? 5 : $vuetify.display.mdAndUp ? 4 : 3">
                 <div class="d-flex flex-column ga-4 pa-4">
                   <template v-for="_i in 5" :key="_i">
                     <div class="d-flex ga-4">
@@ -71,7 +72,7 @@
               </td>
             </tr>
             <tr v-else-if="categories.length === 0">
-              <td :colspan="$vuetify.display.lgAndUp ? 4 : $vuetify.display.mdAndUp ? 3 : 2" class="text-center py-8 text-medium-emphasis">
+              <td :colspan="$vuetify.display.lgAndUp ? 5 : $vuetify.display.mdAndUp ? 4 : 3" class="text-center py-8 text-medium-emphasis">
                 {{ search ? 'No categories found matching your search.' : 'No categories available.' }}
               </td>
             </tr>
@@ -89,6 +90,9 @@
                 <span class="text-truncate d-inline-block" style="max-width: 300px">
                   {{ category.description || '-' }}
                 </span>
+              </td>
+              <td>
+                <span class="text-body-2">{{ category.sort_no }}</span>
               </td>
               <td>
                 <div class="d-flex align-center">
