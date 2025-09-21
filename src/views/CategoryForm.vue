@@ -52,7 +52,21 @@
               ></v-textarea>
             </v-col>
           </v-row>
-          
+         
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model.number="category.sort_no"
+                label="Sort Number"
+                variant="outlined"
+                type="number"
+                min="1"
+                hint="Controls the display order (lower numbers appear first)"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+          </v-row>
+         
           <v-row class="mt-4">
             <v-col cols="12">
               <v-btn
@@ -95,7 +109,8 @@ const isEditing = computed(() => !!route.params.id)
 const category = reactive({
   id: null as number | null,
   name: '',
-  description: ''
+  description: '',
+  sort_no: 1
 })
 
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -142,13 +157,15 @@ async function saveCategory() {
       // Update existing category
       await apiService.updateCategory(category.id, {
         name: category.name,
-        description: category.description
+        description: category.description,
+        sort_no: category.sort_no
       })
     } else {
       // Create new category
       await apiService.createCategory({
         name: category.name,
-        description: category.description
+        description: category.description,
+        sort_no: category.sort_no
       })
     }
     

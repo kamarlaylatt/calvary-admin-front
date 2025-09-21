@@ -140,6 +140,7 @@ interface Category {
   name: string;
   slug: string;
   description?: string;
+  sort_no: number;
   created_at: string;
   updated_at: string;
 }
