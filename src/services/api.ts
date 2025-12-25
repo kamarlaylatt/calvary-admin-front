@@ -152,6 +152,61 @@ interface SongLanguage {
   updated_at: string;
 }
 
+interface SuggestSong {
+  id: number;
+  code: number;
+  title: string;
+  youtube?: string;
+  description?: string;
+  song_writer?: string;
+  style_id?: number | null;
+  key?: string;
+  lyrics?: string;
+  music_notes?: string;
+  popular_rating?: number;
+  email?: string;
+  status: number; // 0 = cancelled, 1 = pending, 2 = approved
+  created_at: string;
+  updated_at: string;
+  style?: Style;
+}
+
+interface UpdateSuggestSongRequest {
+  code?: number;
+  title?: string;
+  youtube?: string;
+  description?: string;
+  song_writer?: string;
+  style_id?: number;
+  key?: string;
+  lyrics?: string;
+  music_notes?: string;
+  popular_rating?: number;
+  email?: string;
+}
+
+interface ApproveSuggestionResponse {
+  message: string;
+  suggestion: {
+    id: number;
+    status: number;
+  };
+  song: {
+    id: number;
+    title: string;
+    code: number;
+    slug: string;
+  };
+}
+
+interface CancelSuggestionResponse {
+  message: string;
+  suggestion: {
+    id: number;
+    status: number;
+  };
+}
+
 class ApiService {
   private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/admin';
   private token: string | null = null;
@@ -439,6 +494,53 @@ class ApiService {
     return this.request<Role[]>('/roles');
   }
 
+  async getSuggestSongs(
+    page: number = 1,
+    status?: number,
+    search?: string,
+    styleId?: number
+  ): Promise<PaginatedResponse<SuggestSong>> {
+    const params = new URLSearchParams();
+    params.append('page', String(page));
+
+    if (status !== undefined && status !== null) {
+      params.append('status', String(status));
+    }
+
+    if (search) {
+      params.append('search', search);
+    }
+
+    if (styleId !== undefined && styleId !== null) {
+      params.append('style_id', String(styleId));
+    }
+
+    return this.request<PaginatedResponse<SuggestSong>>(`/suggest-songs?${params.toString()}`);
+  }
+
+  async getSuggestSong(id: number): Promise<SuggestSong> {
+    return this.request<SuggestSong>(`/suggest-songs/${id}`);
+  }
+
+  async updateSuggestSong(id: number, data: UpdateSuggestSongRequest): Promise<SuggestSong> {
+    return this.request<SuggestSong>(`/suggest-songs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async approveSuggestSong(id: number): Promise<ApproveSuggestionResponse> {
+    return this.request<ApproveSuggestionResponse>(`/suggest-songs/${id}/approve`, {
+      method: 'POST',
+    });
+  }
+
+  async cancelSuggestSong(id: number): Promise<CancelSuggestionResponse> {
+    return this.request<CancelSuggestionResponse>(`/suggest-songs/${id}/cancel`, {
+      method: 'POST',
+    });
+  }
+
   isAuthenticated(): boolean {
     return !!this.token;
   }
@@ -457,4 +559,23 @@ class ApiService {
 }
 
 export default new ApiService();
-export type { LoginCredentials, LoginResponse, AdminProfile, Admin, Role, Song, Style, Category, SongLanguage, PaginatedResponse, CreateSongRequest, UpdateSongRequest, CreateAdminRequest, UpdateAdminRequest };
+export type { 
+  LoginCredentials, 
+  LoginResponse, 
+  AdminProfile, 
+  Admin, 
+  Role, 
+  Song, 
+  Style, 
+  Category, 
+  SongLanguage, 
+  PaginatedResponse, 
+  CreateSongRequest, 
+  UpdateSongRequest, 
+  CreateAdminRequest, 
+  UpdateAdminRequest,
+  SuggestSong,
+  UpdateSuggestSongRequest,
+  ApproveSuggestionResponse,
+  CancelSuggestionResponse
+};

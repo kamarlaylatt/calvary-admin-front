@@ -8,6 +8,8 @@ import Login from '../views/Login.vue'
 import Profile from '../views/Profile.vue'
 import Admins from '../views/Admins.vue'
 import AdminForm from '../views/AdminForm.vue'
+import SuggestSongs from '../views/SuggestSongs.vue'
+import SuggestSongForm from '../views/SuggestSongForm.vue'
 import apiService from '@/services/api'
 
 const routes = [
@@ -125,6 +127,19 @@ const routes = [
     path: '/song-languages/:id/edit',
     name: 'SongLanguageEdit',
     component: () => import('../views/SongLanguageForm.vue'),
+    props: true,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/suggest-songs',
+    name: 'SuggestSongs',
+    component: SuggestSongs,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/suggest-songs/:id/edit',
+    name: 'SuggestSongEdit',
+    component: SuggestSongForm,
     props: true,
     meta: { requiresAuth: true }
   }
