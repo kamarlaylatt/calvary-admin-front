@@ -159,12 +159,8 @@
 
           <v-row>
             <v-col cols="12">
-              <v-textarea
-                v-model="suggestion.lyrics"
-                label="Lyrics"
-                variant="outlined"
-                rows="8"
-              ></v-textarea>
+              <v-label class="text-body-1 font-weight-medium mb-2">Lyrics</v-label>
+              <RichTextEditor v-model="suggestion.lyrics" />
             </v-col>
           </v-row>
 
@@ -206,6 +202,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import RichTextEditor from '@/components/RichTextEditor.vue'
 import apiService, { type Style, type UpdateSuggestSongRequest, type Category, type SongLanguage } from '@/services/api'
 
 const router = useRouter()
