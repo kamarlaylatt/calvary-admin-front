@@ -118,13 +118,14 @@
               <th>Title</th>
               <th class="d-none d-md-table-cell">Style</th>
               <th class="d-none d-sm-table-cell">Email</th>
+              <th class="d-none d-lg-table-cell">Updated</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td :colspan="$vuetify.display.mdAndUp ? 7 : $vuetify.display.smAndUp ? 6 : 5">
+              <td :colspan="$vuetify.display.lgAndUp ? 8 : $vuetify.display.mdAndUp ? 7 : $vuetify.display.smAndUp ? 6 : 5">
                 <div class="d-flex flex-column ga-4 pa-4">
                   <template v-for="_i in 5" :key="_i">
                     <div class="d-flex ga-4">
@@ -141,7 +142,7 @@
               </td>
             </tr>
             <tr v-else-if="suggestionsWithStyles.length === 0">
-              <td :colspan="$vuetify.display.mdAndUp ? 7 : $vuetify.display.smAndUp ? 6 : 5" class="text-center py-8 text-medium-emphasis">
+              <td :colspan="$vuetify.display.lgAndUp ? 8 : $vuetify.display.mdAndUp ? 7 : $vuetify.display.smAndUp ? 6 : 5" class="text-center py-8 text-medium-emphasis">
                 {{ search ? 'No suggestions found matching your search.' : 'No suggestions available.' }}
               </td>
             </tr>
@@ -157,6 +158,9 @@
               <td class="d-none d-md-table-cell">{{ suggestion.styleName }}</td>
               <td class="d-none d-sm-table-cell">
                 <span class="text-caption">{{ suggestion.email || '-' }}</span>
+              </td>
+              <td class="d-none d-lg-table-cell">
+                <span class="text-caption">{{ formatDate(suggestion.updated_at) }}</span>
               </td>
               <td>
                 <v-chip
@@ -376,9 +380,21 @@ async function fetchStyles() {
 }
 
 function clearFilters() {
-  selectedStatus.value = 1 // Reset to pending
+  selectedStatus.value = null
   selectedStyleId.value = null
   search.value = ''
+  page.value = 1
+  fetchSuggestions()
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 function editSuggestion(suggestion: SuggestSong) {
