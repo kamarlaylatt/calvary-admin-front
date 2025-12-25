@@ -212,7 +212,7 @@
       <v-card v-if="suggestion.lyrics" class="mb-4" elevation="2">
         <v-card-title class="bg-surface">Lyrics</v-card-title>
         <v-card-text>
-          <div class="text-body-1 white-space-pre-wrap">{{ suggestion.lyrics }}</div>
+          <div class="lyrics-container html-lyrics" v-html="suggestion.lyrics"></div>
         </v-card-text>
       </v-card>
 
@@ -399,5 +399,39 @@ async function cancelSuggestion() {
 <style scoped>
 .white-space-pre-wrap {
   white-space: pre-wrap;
+}
+
+.lyrics-container {
+  padding: 16px 0;
+  line-height: 1.8;
+}
+
+.html-lyrics {
+  font-size: 1rem;
+  color: rgba(var(--v-foreground-rgb));
+}
+
+.html-lyrics :deep(div) {
+  margin-bottom: 8px;
+  word-wrap: break-word;
+}
+
+.html-lyrics :deep(b),
+.html-lyrics :deep(strong) {
+  font-weight: 600;
+  color: rgba(var(--v-primary-rgb));
+}
+
+.html-lyrics :deep(i),
+.html-lyrics :deep(em) {
+  font-style: italic;
+}
+
+.html-lyrics :deep(u) {
+  text-decoration: underline;
+}
+
+.html-lyrics :deep(div:last-child) {
+  margin-bottom: 0;
 }
 </style>
