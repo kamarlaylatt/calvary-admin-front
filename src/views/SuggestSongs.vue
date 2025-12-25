@@ -170,6 +170,16 @@
               <td>
                 <div class="d-flex align-center ga-1">
                   <v-btn
+                    icon="mdi-eye"
+                    size="small"
+                    variant="text"
+                    color="primary"
+                    @click="viewSuggestion(suggestion)"
+                  >
+                    <v-icon>mdi-eye</v-icon>
+                    <v-tooltip activator="parent" location="top">View</v-tooltip>
+                  </v-btn>
+                  <v-btn
                     v-if="suggestion.status === 1"
                     icon="mdi-check-circle"
                     size="small"
@@ -274,7 +284,7 @@ const page = ref(1)
 const totalPages = ref(1)
 
 // Filter state variables
-const selectedStatus = ref<number | null>(null)
+const selectedStatus = ref<number | null>(1) // Default to pending
 const selectedStyleId = ref<number | null>(null)
 const showFilters = ref(false)
 
@@ -366,13 +376,17 @@ async function fetchStyles() {
 }
 
 function clearFilters() {
-  selectedStatus.value = null
+  selectedStatus.value = 1 // Reset to pending
   selectedStyleId.value = null
   search.value = ''
 }
 
 function editSuggestion(suggestion: SuggestSong) {
   router.push(`/suggest-songs/${suggestion.id}/edit?page=${page.value}`)
+}
+
+function viewSuggestion(suggestion: SuggestSong) {
+  router.push(`/suggest-songs/${suggestion.id}?page=${page.value}`)
 }
 
 function approveSuggestion(suggestion: SuggestSong) {

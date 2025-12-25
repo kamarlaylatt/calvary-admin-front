@@ -10,6 +10,7 @@ import Admins from '../views/Admins.vue'
 import AdminForm from '../views/AdminForm.vue'
 import SuggestSongs from '../views/SuggestSongs.vue'
 import SuggestSongForm from '../views/SuggestSongForm.vue'
+import SuggestSongDetail from '../views/SuggestSongDetail.vue'
 import apiService from '@/services/api'
 
 const routes = [
@@ -134,6 +135,13 @@ const routes = [
     path: '/suggest-songs',
     name: 'SuggestSongs',
     component: SuggestSongs,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/suggest-songs/:id',
+    name: 'SuggestSongDetail',
+    component: SuggestSongDetail,
+    props: true,
     meta: { requiresAuth: true }
   },
   {
