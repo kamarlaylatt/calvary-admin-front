@@ -170,6 +170,10 @@ interface SuggestSong {
   updated_at: string;
   style?: Style;
   categories?: Category[];
+  song_languages?: SongLanguage[];
+  // Some APIs may return camelCase `songLanguages` for suggestions
+  // adding optional alias to be resilient at runtime
+  songLanguages?: SongLanguage[];
 }
 
 interface UpdateSuggestSongRequest {
@@ -185,6 +189,7 @@ interface UpdateSuggestSongRequest {
   popular_rating?: number;
   email?: string;
   category_ids?: number[];
+  song_language_ids?: number[];
 }
 
 interface ApproveSuggestionResponse {
@@ -503,7 +508,8 @@ class ApiService {
     status?: number,
     search?: string,
     styleId?: number,
-    categoryId?: number
+    categoryId?: number,
+    songLanguageId?: number
   ): Promise<PaginatedResponse<SuggestSong>> {
     const params = new URLSearchParams();
     params.append('page', String(page));
@@ -522,6 +528,10 @@ class ApiService {
 
     if (categoryId !== undefined && categoryId !== null) {
       params.append('category_id', String(categoryId));
+    }
+
+    if (songLanguageId !== undefined && songLanguageId !== null) {
+      params.append('song_language_id', String(songLanguageId));
     }
 
     return this.request<PaginatedResponse<SuggestSong>>(`/suggest-songs?${params.toString()}`);

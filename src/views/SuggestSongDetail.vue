@@ -144,6 +144,22 @@
             </v-col>
           </v-row>
           <v-row>
+            <v-col cols="12">
+              <div class="mb-4">
+                <div class="text-caption text-medium-emphasis mb-1">Song Languages</div>
+                <div v-if="(suggestion.song_languages || (suggestion as any).songLanguages)?.length" class="d-flex flex-wrap ga-2">
+                  <v-chip
+                    v-for="l in (suggestion.song_languages ?? (suggestion as any).songLanguages)"
+                    :key="l.id"
+                    size="small"
+                    variant="tonal"
+                  >{{ l.name }}</v-chip>
+                </div>
+                <div v-else class="text-body-1">-</div>
+              </div>
+            </v-col>
+          </v-row>
+          <v-row>
             <v-col cols="12" md="6">
               <div class="mb-4">
                 <div class="text-caption text-medium-emphasis mb-1">Email</div>

@@ -100,6 +100,34 @@
                   hide-details
                 ></v-select>
               </v-col>
+              <!-- Song Language Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedSongLanguageId"
+                  :items="songLanguages"
+                  item-title="name"
+                  item-value="id"
+                  label="Song Language"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                  hide-details
+                ></v-select>
+              </v-col>
+              <!-- Category Filter -->
+              <v-col cols="12" sm="6" md="3">
+                <v-select
+                  v-model="selectedCategoryId"
+                  :items="categories"
+                  item-title="name"
+                  item-value="id"
+                  label="Category"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                  hide-details
+                ></v-select>
+              </v-col>
             </v-row>
           </v-card-text>
         </div>
@@ -284,7 +312,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import apiService, { type SuggestSong, type Style, type Category } from '@/services/api'
+import apiService, { type SuggestSong, type Style, type Category, type SongLanguage } from '@/services/api'
 
 type SuggestSongWithStyleName = SuggestSong & { styleName: string }
 
@@ -305,11 +333,13 @@ const totalPages = ref(1)
 const selectedStatus = ref<number | null>(1) // Default to pending
 const selectedStyleId = ref<number | null>(null)
 const selectedCategoryId = ref<number | null>(null)
+const selectedSongLanguageId = ref<number | null>(null)
 const showFilters = ref(false)
 
 const suggestions = ref<SuggestSong[]>([])
 const styles = ref<Style[]>([])
 const categories = ref<Category[]>([])
+const songLanguages = ref<SongLanguage[]>([])
 
 const statusOptions = [
   { text: 'Pending', value: 1 },
@@ -359,10 +389,11 @@ onMounted(() => {
   fetchSuggestions()
   fetchStyles()
   fetchCategories()
+  fetchSongLanguages()
 })
 
 // Watch for filter changes
-watch([selectedStatus, selectedStyleId, selectedCategoryId], () => {
+watch([selectedStatus, selectedStyleId, selectedCategoryId, selectedSongLanguageId], () => {
   page.value = 1
   fetchSuggestions()
 }, { deep: true })
@@ -377,7 +408,8 @@ async function fetchSuggestions() {
       selectedStatus.value !== null ? selectedStatus.value : undefined,
       search.value || undefined,
       selectedStyleId.value || undefined,
-      selectedCategoryId.value || undefined
+      selectedCategoryId.value || undefined,
+      selectedSongLanguageId.value || undefined
     )
     suggestions.value = response.data
     totalPages.value = response.last_page
@@ -405,10 +437,19 @@ async function fetchCategories() {
   }
 }
 
+async function fetchSongLanguages() {
+  try {
+    songLanguages.value = await apiService.getSongLanguages()
+  } catch (err) {
+    console.error('Error fetching song languages:', err)
+  }
+}
+
 function clearFilters() {
   selectedStatus.value = null
   selectedStyleId.value = null
   selectedCategoryId.value = null
+  selectedSongLanguageId.value = null
   search.value = ''
   page.value = 1
   fetchSuggestions()

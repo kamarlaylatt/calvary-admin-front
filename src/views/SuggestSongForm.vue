@@ -109,6 +109,21 @@
                 persistent-hint
               ></v-select>
             </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="selectedSongLanguageIds"
+                :items="songLanguages"
+                item-title="name"
+                item-value="id"
+                label="Song Languages"
+                variant="outlined"
+                multiple
+                chips
+                clearable
+                hint="Associate one or more song languages"
+                persistent-hint
+              ></v-select>
+            </v-col>
           </v-row>
 
           <v-row>
@@ -191,7 +206,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import apiService, { type Style, type UpdateSuggestSongRequest, type Category } from '@/services/api'
+import apiService, { type Style, type UpdateSuggestSongRequest, type Category, type SongLanguage } from '@/services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -212,7 +227,9 @@ const suggestion = ref<UpdateSuggestSongRequest & { code?: number; title?: strin
 
 const styles = ref<Style[]>([])
 const categories = ref<Category[]>([])
+const songLanguages = ref<SongLanguage[]>([])
 const selectedCategoryIds = ref<number[]>([])
+const selectedSongLanguageIds = ref<number[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
@@ -223,7 +240,8 @@ onMounted(async () => {
   await Promise.all([
     fetchSuggestion(),
     fetchStyles(),
-    fetchCategories()
+    fetchCategories(),
+    fetchSongLanguages()
   ])
 })
 
@@ -249,6 +267,10 @@ async function fetchSuggestion() {
     if (data.categories && Array.isArray(data.categories)) {
       selectedCategoryIds.value = data.categories.map(c => c.id)
     }
+    const languages = (data.song_languages ?? (data as any).songLanguages) as SongLanguage[] | undefined
+    if (languages && Array.isArray(languages)) {
+      selectedSongLanguageIds.value = languages.map(l => l.id)
+    }
   } catch (err) {
     error.value = 'Failed to load suggestion. ' + (err instanceof Error ? err.message : 'Please try again.')
     console.error('Error fetching suggestion:', err)
@@ -273,6 +295,14 @@ async function fetchCategories() {
   }
 }
 
+async function fetchSongLanguages() {
+  try {
+    songLanguages.value = await apiService.getSongLanguages()
+  } catch (err) {
+    console.error('Error fetching song languages:', err)
+  }
+}
+
 async function saveSuggestion() {
   saving.value = true
   error.value = ''
@@ -292,6 +322,7 @@ async function saveSuggestion() {
     if (suggestion.value.popular_rating !== undefined) updateData.popular_rating = suggestion.value.popular_rating
     if (suggestion.value.email) updateData.email = suggestion.value.email
     if (selectedCategoryIds.value && selectedCategoryIds.value.length > 0) updateData.category_ids = selectedCategoryIds.value
+    if (selectedSongLanguageIds.value && selectedSongLanguageIds.value.length > 0) updateData.song_language_ids = selectedSongLanguageIds.value
     
     await apiService.updateSuggestSong(suggestionId, updateData)
     router.push({ path: '/suggest-songs', query: { page: route.query.page } })
