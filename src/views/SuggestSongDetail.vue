@@ -128,6 +128,22 @@
             </v-col>
           </v-row>
           <v-row>
+            <v-col cols="12">
+              <div class="mb-4">
+                <div class="text-caption text-medium-emphasis mb-1">Categories</div>
+                <div v-if="suggestion.categories && suggestion.categories.length" class="d-flex flex-wrap ga-2">
+                  <v-chip
+                    v-for="c in suggestion.categories"
+                    :key="c.id"
+                    size="small"
+                    variant="tonal"
+                  >{{ c.name }}</v-chip>
+                </div>
+                <div v-else class="text-body-1">-</div>
+              </div>
+            </v-col>
+          </v-row>
+          <v-row>
             <v-col cols="12" md="6">
               <div class="mb-4">
                 <div class="text-caption text-medium-emphasis mb-1">Email</div>

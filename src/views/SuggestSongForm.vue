@@ -95,6 +95,24 @@
 
           <v-row>
             <v-col cols="12" md="6">
+              <v-select
+                v-model="selectedCategoryIds"
+                :items="categories"
+                item-title="name"
+                item-value="id"
+                label="Categories"
+                variant="outlined"
+                multiple
+                chips
+                clearable
+                hint="Associate one or more categories"
+                persistent-hint
+              ></v-select>
+            </v-col>
+          </v-row>
+
+          <v-row>
+            <v-col cols="12" md="6">
               <v-text-field
                 v-model="suggestion.email"
                 label="Email"
@@ -173,7 +191,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import apiService, { type Style, type UpdateSuggestSongRequest } from '@/services/api'
+import apiService, { type Style, type UpdateSuggestSongRequest, type Category } from '@/services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -193,6 +211,8 @@ const suggestion = ref<UpdateSuggestSongRequest & { code?: number; title?: strin
 })
 
 const styles = ref<Style[]>([])
+const categories = ref<Category[]>([])
+const selectedCategoryIds = ref<number[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
@@ -202,7 +222,8 @@ const suggestionId = parseInt(route.params.id as string)
 onMounted(async () => {
   await Promise.all([
     fetchSuggestion(),
-    fetchStyles()
+    fetchStyles(),
+    fetchCategories()
   ])
 })
 
@@ -225,6 +246,9 @@ async function fetchSuggestion() {
       popular_rating: data.popular_rating,
       email: data.email || ''
     }
+    if (data.categories && Array.isArray(data.categories)) {
+      selectedCategoryIds.value = data.categories.map(c => c.id)
+    }
   } catch (err) {
     error.value = 'Failed to load suggestion. ' + (err instanceof Error ? err.message : 'Please try again.')
     console.error('Error fetching suggestion:', err)
@@ -238,6 +262,14 @@ async function fetchStyles() {
     styles.value = await apiService.getStyles()
   } catch (err) {
     console.error('Error fetching styles:', err)
+  }
+}
+
+async function fetchCategories() {
+  try {
+    categories.value = await apiService.getAllCategories()
+  } catch (err) {
+    console.error('Error fetching categories:', err)
   }
 }
 
@@ -259,6 +291,7 @@ async function saveSuggestion() {
     if (suggestion.value.music_notes) updateData.music_notes = suggestion.value.music_notes
     if (suggestion.value.popular_rating !== undefined) updateData.popular_rating = suggestion.value.popular_rating
     if (suggestion.value.email) updateData.email = suggestion.value.email
+    if (selectedCategoryIds.value && selectedCategoryIds.value.length > 0) updateData.category_ids = selectedCategoryIds.value
     
     await apiService.updateSuggestSong(suggestionId, updateData)
     router.push({ path: '/suggest-songs', query: { page: route.query.page } })

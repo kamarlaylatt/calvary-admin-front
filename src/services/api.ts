@@ -169,6 +169,7 @@ interface SuggestSong {
   created_at: string;
   updated_at: string;
   style?: Style;
+  categories?: Category[];
 }
 
 interface UpdateSuggestSongRequest {
@@ -183,6 +184,7 @@ interface UpdateSuggestSongRequest {
   music_notes?: string;
   popular_rating?: number;
   email?: string;
+  category_ids?: number[];
 }
 
 interface ApproveSuggestionResponse {
@@ -196,6 +198,8 @@ interface ApproveSuggestionResponse {
     title: string;
     code: number;
     slug: string;
+    categories: Category[];
+    song_languages: SongLanguage[];
   };
 }
 
@@ -498,7 +502,8 @@ class ApiService {
     page: number = 1,
     status?: number,
     search?: string,
-    styleId?: number
+    styleId?: number,
+    categoryId?: number
   ): Promise<PaginatedResponse<SuggestSong>> {
     const params = new URLSearchParams();
     params.append('page', String(page));
@@ -513,6 +518,10 @@ class ApiService {
 
     if (styleId !== undefined && styleId !== null) {
       params.append('style_id', String(styleId));
+    }
+
+    if (categoryId !== undefined && categoryId !== null) {
+      params.append('category_id', String(categoryId));
     }
 
     return this.request<PaginatedResponse<SuggestSong>>(`/suggest-songs?${params.toString()}`);
