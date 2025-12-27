@@ -205,10 +205,22 @@ import { useRouter, useRoute } from 'vue-router'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 import apiService, { type Style, type UpdateSuggestSongRequest, type Category, type SongLanguage } from '@/services/api'
 
+type LocalSuggestion = UpdateSuggestSongRequest & {
+  code?: number;
+  title?: string;
+  lyrics: string;
+  music_notes: string;
+  youtube: string;
+  description: string;
+  song_writer: string;
+  key: string;
+  email: string;
+}
+
 const router = useRouter()
 const route = useRoute()
 
-const suggestion = ref<UpdateSuggestSongRequest & { code?: number; title?: string }>({
+const suggestion = ref<LocalSuggestion>({
   code: undefined,
   title: '',
   youtube: '',
