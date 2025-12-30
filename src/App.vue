@@ -93,16 +93,17 @@ const handleLogout = async () => {
 
       <v-divider></v-divider>
 
-      <v-list density="compact" nav>
-        <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="navigateTo('/dashboard')"></v-list-item>
-        <v-list-item v-if="isSuperAdmin" prepend-icon="mdi-account-group" title="Admins" value="admins" @click="navigateTo('/admins')"></v-list-item>
-        <v-list-item prepend-icon="mdi-tag" title="Categories" value="categories" @click="navigateTo('/categories')"></v-list-item>
-        <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="navigateTo('/styles')"></v-list-item>
-        <v-list-item prepend-icon="mdi-translate" title="Song Languages" value="song-languages" @click="navigateTo('/song-languages')"></v-list-item>
-        <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="navigateTo('/songs')"></v-list-item>
-        <v-list-item prepend-icon="mdi-lightbulb" title="Song Suggestions" value="suggest-songs" @click="navigateTo('/suggest-songs')"></v-list-item>
-        <v-list-item prepend-icon="mdi-account" title="Profile" value="profile" @click="navigateTo('/profile')"></v-list-item>
-      </v-list>
+       <v-list density="compact" nav>
+         <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard" @click="navigateTo('/dashboard')"></v-list-item>
+         <v-list-item v-if="isSuperAdmin" prepend-icon="mdi-account-group" title="Admins" value="admins" @click="navigateTo('/admins')"></v-list-item>
+         <v-list-item prepend-icon="mdi-tag" title="Categories" value="categories" @click="navigateTo('/categories')"></v-list-item>
+         <v-list-item prepend-icon="mdi-palette" title="Styles" value="styles" @click="navigateTo('/styles')"></v-list-item>
+         <v-list-item prepend-icon="mdi-translate" title="Song Languages" value="song-languages" @click="navigateTo('/song-languages')"></v-list-item>
+         <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="navigateTo('/songs')"></v-list-item>
+         <v-list-item prepend-icon="mdi-lightbulb" title="Song Suggestions" value="suggest-songs" @click="navigateTo('/suggest-songs')"></v-list-item>
+         <v-list-item prepend-icon="mdi-cellphone" title="App Versions" value="app-versions" @click="navigateTo('/app-versions')"></v-list-item>
+         <v-list-item prepend-icon="mdi-account" title="Profile" value="profile" @click="navigateTo('/profile')"></v-list-item>
+       </v-list>
       
       <template v-slot:append>
         <div class="pa-2">

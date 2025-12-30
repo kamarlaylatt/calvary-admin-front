@@ -208,13 +208,43 @@ interface ApproveSuggestionResponse {
   };
 }
 
-interface CancelSuggestionResponse {
-  message: string;
-  suggestion: {
-    id: number;
-    status: number;
-  };
-}
+ interface CancelSuggestionResponse {
+   message: string;
+   suggestion: {
+     id: number;
+     status: number;
+   };
+ }
+
+ interface AppVersion {
+   id: number;
+   platform: 'android' | 'ios';
+   version_code: number;
+   version_name: string;
+   update_url: string;
+   release_notes: string;
+   is_force_update: boolean;
+   created_at: string;
+   updated_at: string;
+ }
+
+ interface CreateAppVersionRequest {
+   platform: 'android' | 'ios';
+   version_code: number;
+   version_name: string;
+   update_url: string;
+   release_notes: string;
+   is_force_update: boolean;
+ }
+
+ interface UpdateAppVersionRequest {
+   platform?: 'android' | 'ios';
+   version_code?: number;
+   version_name?: string;
+   update_url?: string;
+   release_notes?: string;
+   is_force_update?: boolean;
+ }
 
 class ApiService {
   private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/admin';
@@ -554,15 +584,48 @@ class ApiService {
     });
   }
 
-  async cancelSuggestSong(id: number): Promise<CancelSuggestionResponse> {
-    return this.request<CancelSuggestionResponse>(`/suggest-songs/${id}/cancel`, {
-      method: 'POST',
-    });
-  }
+   async cancelSuggestSong(id: number): Promise<CancelSuggestionResponse> {
+     return this.request<CancelSuggestionResponse>(`/suggest-songs/${id}/cancel`, {
+       method: 'POST',
+     });
+   }
 
-  isAuthenticated(): boolean {
-    return !!this.token;
-  }
+   async getAppVersions(page: number = 1, platform?: 'android' | 'ios'): Promise<PaginatedResponse<AppVersion>> {
+     const params = new URLSearchParams();
+     params.append('page', String(page));
+     if (platform) {
+       params.append('platform', platform);
+     }
+     return this.request<PaginatedResponse<AppVersion>>(`/app-versions?${params.toString()}`);
+   }
+
+   async createAppVersion(appVersion: CreateAppVersionRequest): Promise<AppVersion> {
+     return this.request<AppVersion>('/app-versions', {
+       method: 'POST',
+       body: JSON.stringify(appVersion),
+     });
+   }
+
+   async getAppVersion(id: number): Promise<AppVersion> {
+     return this.request<AppVersion>(`/app-versions/${id}`);
+   }
+
+   async updateAppVersion(id: number, appVersion: UpdateAppVersionRequest): Promise<AppVersion> {
+     return this.request<AppVersion>(`/app-versions/${id}`, {
+       method: 'PUT',
+       body: JSON.stringify(appVersion),
+     });
+   }
+
+   async deleteAppVersion(id: number): Promise<void> {
+     return this.request<void>(`/app-versions/${id}`, {
+       method: 'DELETE',
+     });
+   }
+
+   isAuthenticated(): boolean {
+     return !!this.token;
+   }
 
   isAdmin(): boolean {
     try {
@@ -577,24 +640,27 @@ class ApiService {
   }
 }
 
-export default new ApiService();
-export type { 
-  LoginCredentials, 
-  LoginResponse, 
-  AdminProfile, 
-  Admin, 
-  Role, 
-  Song, 
-  Style, 
-  Category, 
-  SongLanguage, 
-  PaginatedResponse, 
-  CreateSongRequest, 
-  UpdateSongRequest, 
-  CreateAdminRequest, 
-  UpdateAdminRequest,
-  SuggestSong,
-  UpdateSuggestSongRequest,
-  ApproveSuggestionResponse,
-  CancelSuggestionResponse
-};
+ export default new ApiService();
+ export type { 
+   LoginCredentials, 
+   LoginResponse, 
+   AdminProfile, 
+   Admin, 
+   Role, 
+   Song, 
+   Style, 
+   Category, 
+   SongLanguage, 
+   PaginatedResponse, 
+   CreateSongRequest, 
+   UpdateSongRequest, 
+   CreateAdminRequest, 
+   UpdateAdminRequest,
+   SuggestSong,
+   UpdateSuggestSongRequest,
+   ApproveSuggestionResponse,
+   CancelSuggestionResponse,
+   AppVersion,
+   CreateAppVersionRequest,
+   UpdateAppVersionRequest
+ };

@@ -11,6 +11,8 @@ import AdminForm from '../views/AdminForm.vue'
 import SuggestSongs from '../views/SuggestSongs.vue'
 import SuggestSongForm from '../views/SuggestSongForm.vue'
 import SuggestSongDetail from '../views/SuggestSongDetail.vue'
+import AppVersions from '../views/AppVersions.vue'
+import AppVersionForm from '../views/AppVersionForm.vue'
 import apiService from '@/services/api'
 
 const routes = [
@@ -148,6 +150,25 @@ const routes = [
     path: '/suggest-songs/:id/edit',
     name: 'SuggestSongEdit',
     component: SuggestSongForm,
+    props: true,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/app-versions',
+    name: 'AppVersions',
+    component: AppVersions,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/app-versions/new',
+    name: 'AppVersionNew',
+    component: AppVersionForm,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/app-versions/:id/edit',
+    name: 'AppVersionEdit',
+    component: AppVersionForm,
     props: true,
     meta: { requiresAuth: true }
   }
