@@ -246,6 +246,57 @@ interface ApproveSuggestionResponse {
    is_force_update?: boolean;
  }
 
+interface HymnCategory {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CreateHymnCategoryRequest {
+  name: string;
+}
+
+interface UpdateHymnCategoryRequest {
+  name?: string;
+}
+
+interface Hymn {
+  id: number;
+  no: number;
+  hymn_category_id: number;
+  song_id: number | null;
+  reference_id: number | null;
+  english_title: string;
+  created_at: string;
+  updated_at: string;
+  hymn_category?: HymnCategory;
+  song?: {
+    id: number;
+    title: string;
+    code: number;
+    slug: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+interface CreateHymnRequest {
+  no: number;
+  hymn_category_id: number;
+  song_id?: number;
+  reference_id?: number;
+  english_title?: string;
+}
+
+interface UpdateHymnRequest {
+  no?: number;
+  hymn_category_id?: number;
+  song_id?: number;
+  reference_id?: number;
+  english_title?: string;
+}
+
 class ApiService {
   private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/admin';
   private token: string | null = null;
@@ -623,6 +674,114 @@ class ApiService {
      });
    }
 
+   // Hymn Categories
+   async getHymnCategories(page: number = 1, search?: string, sortBy?: 'name' | 'created_at' | 'id', sortOrder?: 'asc' | 'desc'): Promise<PaginatedResponse<HymnCategory>> {
+     const params = new URLSearchParams();
+     params.append('page', String(page));
+     if (search) {
+       params.append('search', search);
+     }
+     if (sortBy) {
+       params.append('sort_by', sortBy);
+     }
+     if (sortOrder) {
+       params.append('sort_order', sortOrder);
+     }
+     return this.request<PaginatedResponse<HymnCategory>>(`/hymn-categories?${params.toString()}`);
+   }
+
+   async getAllHymnCategories(): Promise<HymnCategory[]> {
+     const response = await this.request<PaginatedResponse<HymnCategory>>('/hymn-categories?per_page=1000');
+     return response.data;
+   }
+
+   async createHymnCategory(category: CreateHymnCategoryRequest): Promise<HymnCategory> {
+     return this.request<HymnCategory>('/hymn-categories', {
+       method: 'POST',
+       body: JSON.stringify(category),
+     });
+   }
+
+   async getHymnCategory(id: number): Promise<HymnCategory> {
+     return this.request<HymnCategory>(`/hymn-categories/${id}`);
+   }
+
+   async updateHymnCategory(id: number, category: UpdateHymnCategoryRequest): Promise<HymnCategory> {
+     return this.request<HymnCategory>(`/hymn-categories/${id}`, {
+       method: 'PUT',
+       body: JSON.stringify(category),
+     });
+   }
+
+   async deleteHymnCategory(id: number): Promise<void> {
+     return this.request<void>(`/hymn-categories/${id}`, {
+       method: 'DELETE',
+     });
+   }
+
+   // Hymns
+   async getHymns(
+     page: number = 1,
+     id?: number,
+     no?: number,
+     search?: string,
+     hymnCategoryId?: number,
+     songId?: number,
+     sortBy?: 'no' | 'created_at' | 'id' | 'reference_id',
+     sortOrder?: 'asc' | 'desc'
+   ): Promise<PaginatedResponse<Hymn>> {
+     const params = new URLSearchParams();
+     params.append('page', String(page));
+
+     if (id !== undefined && id !== null) {
+       params.append('id', String(id));
+     }
+     if (no !== undefined && no !== null) {
+       params.append('no', String(no));
+     }
+     if (search) {
+       params.append('search', search);
+     }
+     if (hymnCategoryId !== undefined && hymnCategoryId !== null) {
+       params.append('hymn_category_id', String(hymnCategoryId));
+     }
+     if (songId !== undefined && songId !== null) {
+       params.append('song_id', String(songId));
+     }
+     if (sortBy) {
+       params.append('sort_by', sortBy);
+     }
+     if (sortOrder) {
+       params.append('sort_order', sortOrder);
+     }
+
+     return this.request<PaginatedResponse<Hymn>>(`/hymns?${params.toString()}`);
+   }
+
+   async createHymn(hymn: CreateHymnRequest): Promise<Hymn> {
+     return this.request<Hymn>('/hymns', {
+       method: 'POST',
+       body: JSON.stringify(hymn),
+     });
+   }
+
+   async getHymn(id: number): Promise<Hymn> {
+     return this.request<Hymn>(`/hymns/${id}`);
+   }
+
+   async updateHymn(id: number, hymn: UpdateHymnRequest): Promise<Hymn> {
+     return this.request<Hymn>(`/hymns/${id}`, {
+       method: 'PUT',
+       body: JSON.stringify(hymn),
+     });
+   }
+
+   async deleteHymn(id: number): Promise<void> {
+     return this.request<void>(`/hymns/${id}`, {
+       method: 'DELETE',
+     });
+   }
+
    isAuthenticated(): boolean {
      return !!this.token;
    }
@@ -641,20 +800,20 @@ class ApiService {
 }
 
  export default new ApiService();
- export type { 
-   LoginCredentials, 
-   LoginResponse, 
-   AdminProfile, 
-   Admin, 
-   Role, 
-   Song, 
-   Style, 
-   Category, 
-   SongLanguage, 
-   PaginatedResponse, 
-   CreateSongRequest, 
-   UpdateSongRequest, 
-   CreateAdminRequest, 
+ export type {
+   LoginCredentials,
+   LoginResponse,
+   AdminProfile,
+   Admin,
+   Role,
+   Song,
+   Style,
+   Category,
+   SongLanguage,
+   PaginatedResponse,
+   CreateSongRequest,
+   UpdateSongRequest,
+   CreateAdminRequest,
    UpdateAdminRequest,
    SuggestSong,
    UpdateSuggestSongRequest,
@@ -662,5 +821,11 @@ class ApiService {
    CancelSuggestionResponse,
    AppVersion,
    CreateAppVersionRequest,
-   UpdateAppVersionRequest
+   UpdateAppVersionRequest,
+   HymnCategory,
+   CreateHymnCategoryRequest,
+   UpdateHymnCategoryRequest,
+   Hymn,
+   CreateHymnRequest,
+   UpdateHymnRequest
  };

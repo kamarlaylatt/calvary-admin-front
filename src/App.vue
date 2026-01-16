@@ -101,6 +101,8 @@ const handleLogout = async () => {
          <v-list-item prepend-icon="mdi-translate" title="Song Languages" value="song-languages" @click="navigateTo('/song-languages')"></v-list-item>
          <v-list-item prepend-icon="mdi-music-note" title="Songs" value="songs" @click="navigateTo('/songs')"></v-list-item>
          <v-list-item prepend-icon="mdi-lightbulb" title="Song Suggestions" value="suggest-songs" @click="navigateTo('/suggest-songs')"></v-list-item>
+         <v-list-item prepend-icon="mdi-book-music" title="Hymn Categories" value="hymn-categories" @click="navigateTo('/hymn-categories')"></v-list-item>
+         <v-list-item prepend-icon="mdi-book" title="Hymns" value="hymns" @click="navigateTo('/hymns')"></v-list-item>
          <v-list-item prepend-icon="mdi-cellphone" title="App Versions" value="app-versions" @click="navigateTo('/app-versions')"></v-list-item>
          <v-list-item prepend-icon="mdi-account" title="Profile" value="profile" @click="navigateTo('/profile')"></v-list-item>
        </v-list>

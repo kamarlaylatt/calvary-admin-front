@@ -13,6 +13,10 @@ import SuggestSongForm from '../views/SuggestSongForm.vue'
 import SuggestSongDetail from '../views/SuggestSongDetail.vue'
 import AppVersions from '../views/AppVersions.vue'
 import AppVersionForm from '../views/AppVersionForm.vue'
+import HymnCategories from '../views/HymnCategories.vue'
+import HymnCategoryForm from '../views/HymnCategoryForm.vue'
+import Hymns from '../views/Hymns.vue'
+import HymnForm from '../views/HymnForm.vue'
 import apiService from '@/services/api'
 
 const routes = [
@@ -169,6 +173,44 @@ const routes = [
     path: '/app-versions/:id/edit',
     name: 'AppVersionEdit',
     component: AppVersionForm,
+    props: true,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hymn-categories',
+    name: 'HymnCategories',
+    component: HymnCategories,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hymn-categories/new',
+    name: 'HymnCategoryNew',
+    component: HymnCategoryForm,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hymn-categories/:id/edit',
+    name: 'HymnCategoryEdit',
+    component: HymnCategoryForm,
+    props: true,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hymns',
+    name: 'Hymns',
+    component: Hymns,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hymns/new',
+    name: 'HymnNew',
+    component: HymnForm,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hymns/:id/edit',
+    name: 'HymnEdit',
+    component: HymnForm,
     props: true,
     meta: { requiresAuth: true }
   }
