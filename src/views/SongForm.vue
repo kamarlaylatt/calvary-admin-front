@@ -137,7 +137,7 @@
                                 v-model="song.description"
                                 label="Description"
                                 variant="outlined"
-                                rows="3"
+                                rows="8"
                             ></v-textarea>
                         </v-col>
                     </v-row>
@@ -150,6 +150,19 @@
                             <RichTextEditor v-model="song.lyrics" />
                         </v-col>
                     </v-row>
+
+                    <v-row>
+                        <v-col cols="12">
+                            <v-textarea
+                                v-model="song.lyrics"
+                                label="Lyrics Simple Edit"
+                                variant="outlined"
+                                rows="3"
+                            ></v-textarea>
+                        </v-col>
+                    </v-row>
+
+                    
 
                     <v-row>
                         <v-col cols="12">
