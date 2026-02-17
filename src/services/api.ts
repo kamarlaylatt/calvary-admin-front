@@ -271,14 +271,7 @@ interface Hymn {
   created_at: string;
   updated_at: string;
   hymn_category?: HymnCategory;
-  song?: {
-    id: number;
-    title: string;
-    code: number;
-    slug: string;
-    created_at: string;
-    updated_at: string;
-  };
+  song?: Song;
 }
 
 interface CreateHymnRequest {

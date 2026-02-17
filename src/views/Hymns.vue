@@ -137,6 +137,7 @@
                             <th class="d-none d-sm-table-cell">Category</th>
                             <th class="d-none d-md-table-cell">Reference ID</th>
                             <th class="d-none d-lg-table-cell">Song ID</th>
+                            <th class="d-none d-sm-table-cell">YouTube</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -145,12 +146,12 @@
                             <td
                                 :colspan="
                                     $vuetify.display.lgAndUp
-                                        ? 7
+                                        ? 8
                                         : $vuetify.display.mdAndUp
-                                          ? 6
+                                          ? 7
                                           : $vuetify.display.smAndUp
-                                            ? 5
-                                            : 4
+                                            ? 6
+                                            : 5
                                 "
                             >
                                 <div class="d-flex flex-column ga-4 pa-4">
@@ -197,12 +198,12 @@
                             <td
                                 :colspan="
                                     $vuetify.display.lgAndUp
-                                        ? 7
+                                        ? 8
                                         : $vuetify.display.mdAndUp
-                                          ? 6
+                                          ? 7
                                           : $vuetify.display.smAndUp
-                                            ? 5
-                                            : 4
+                                            ? 6
+                                            : 5
                                 "
                                 class="text-center py-8 text-medium-emphasis"
                             >
@@ -253,9 +254,31 @@
                                     >-</span
                                 >
                             </td>
+                            <td class="d-none d-sm-table-cell">
+                                <v-btn
+                                    v-if="hymn.song?.youtube"
+                                    icon="mdi-youtube"
+                                    size="small"
+                                    variant="text"
+                                    color="error"
+                                    :href="hymn.song.youtube"
+                                    target="_blank"
+                                ></v-btn>
+                                <span v-else class="text-medium-emphasis">-</span>
+                            </td>
 
                             <td>
-                                <div class="d-flex ga-1">
+                                <div class="d-flex align-center">
+                                    <v-btn
+                                        v-if="hymn.song?.youtube"
+                                        icon="mdi-youtube"
+                                        size="small"
+                                        variant="text"
+                                        color="error"
+                                        :href="hymn.song.youtube"
+                                        target="_blank"
+                                        class="d-sm-none"
+                                    ></v-btn>
                                     <v-btn
                                         icon="mdi-pencil"
                                         size="small"
