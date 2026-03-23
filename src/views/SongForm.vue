@@ -154,7 +154,7 @@
                     <v-row>
                         <v-col cols="12">
                             <v-textarea
-                                v-model="song.lyrics"
+                                v-model="lyricsSimple"
                                 label="Lyrics Simple Edit"
                                 variant="outlined"
                                 rows="3"
@@ -240,6 +240,24 @@ const song = reactive({
 const styles = ref<Style[]>([]);
 const categories = ref<Category[]>([]);
 const songLanguages = ref<SongLanguage[]>([]);
+
+// Plain-text computed for "Lyrics Simple Edit" — avoids exposing raw HTML tags
+const lyricsSimple = computed({
+    get() {
+        return song.lyrics
+            .replace(/<br\s*\/?>\s*<\/p>/gi, "</p>")  // strip trailing <br> inside <p>
+            .replace(/<\/p>\s*<p>/gi, "\n")            // paragraph boundary → newline
+            .replace(/<br\s*\/?>/gi, "\n")             // remaining <br> → newline
+            .replace(/<[^>]+>/g, "")                   // strip remaining tags
+            .trim();
+    },
+    set(plainText: string) {
+        song.lyrics = plainText
+            .split("\n")
+            .map((line) => `<p>${line || "<br>"}</p>`)
+            .join("");
+    },
+});
 
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
